@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Identity;
+﻿using Blog.Enums;
+using Microsoft.AspNetCore.Identity;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
@@ -28,7 +29,7 @@ namespace Blog.Models
         [DataType(DataType.Date)]
         [Display(Name = "Updated On")]
         public DateTime? Updated { get; set; }
-        public bool IsReady { get; set; }
+        public ReadyStatus Status { get; set; }
         public string Slug { get; set; }
         public byte[] ImageData { get; set; }
         public string ContentType { get; set; }
