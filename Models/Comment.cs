@@ -1,5 +1,4 @@
 ﻿using Blog.Enums;
-using Microsoft.AspNetCore.Identity;
 using System.ComponentModel.DataAnnotations;
 
 namespace Blog.Models
@@ -28,7 +27,7 @@ namespace Blog.Models
 
         // Navigation properties
         public virtual Post Post { get; set; }
-        public virtual IdentityUser Author { get; set; }
-        public virtual IdentityUser Moderator { get; set; }
+        public virtual BlogUser Author { get; set; }
+        public virtual BlogUser Moderator { get; set; }
     }
 }
