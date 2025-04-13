@@ -88,8 +88,6 @@ namespace Blog.Controllers
                 return NotFound();
             }
 
-            ViewData["AuthorId"] = new SelectList(_context.Users, "Id", "Id", blog.AuthorId);
-
             return View(blog);
         }
 
@@ -98,7 +96,7 @@ namespace Blog.Controllers
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, [Bind("Id,AuthorId,Name,Description,Created,Updated,ImageData,ContentType")] Blog.Models.Blog blog)
+        public async Task<IActionResult> Edit(int id, [Bind("Id,Name,Description,Image")] Blog.Models.Blog blog)
         {
             if (id != blog.Id)
             {
