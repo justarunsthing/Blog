@@ -2,7 +2,6 @@
 
   <PropertyGroup>
     <TargetFramework>net9.0</TargetFramework>
-    <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <UserSecretsId>aspnet-Blog-ead6a4b4-443d-49f2-a8c1-2f161d0d3d7a</UserSecretsId>
   </PropertyGroup>

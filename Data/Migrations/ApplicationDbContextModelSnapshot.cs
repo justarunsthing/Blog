@@ -31,11 +31,9 @@ namespace Blog.Data.Migrations
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
                     b.Property<string>("AuthorId")
-                        .IsRequired()
                         .HasColumnType("text");
 
                     b.Property<string>("ContentType")
-                        .IsRequired()
                         .HasColumnType("text");
 
                     b.Property<DateTime>("Created")
@@ -47,7 +45,6 @@ namespace Blog.Data.Migrations
                         .HasColumnType("character varying(500)");
 
                     b.Property<byte[]>("ImageData")
-                        .IsRequired()
                         .HasColumnType("bytea");
 
                     b.Property<string>("Name")
@@ -78,7 +75,6 @@ namespace Blog.Data.Migrations
                         .HasColumnType("text");
 
                     b.Property<string>("ContentType")
-                        .IsRequired()
                         .HasColumnType("text");
 
                     b.Property<string>("Email")
@@ -89,7 +85,6 @@ namespace Blog.Data.Migrations
                         .HasColumnType("boolean");
 
                     b.Property<string>("FacebookUrl")
-                        .IsRequired()
                         .HasMaxLength(100)
                         .HasColumnType("character varying(100)");
 
@@ -99,7 +94,6 @@ namespace Blog.Data.Migrations
                         .HasColumnType("character varying(50)");
 
                     b.Property<byte[]>("ImageData")
-                        .IsRequired()
                         .HasColumnType("bytea");
 
                     b.Property<string>("LastName")
@@ -134,7 +128,6 @@ namespace Blog.Data.Migrations
                         .HasColumnType("text");
 
                     b.Property<string>("TwitterUrl")
-                        .IsRequired()
                         .HasMaxLength(100)
                         .HasColumnType("character varying(100)");
 
@@ -166,7 +159,6 @@ namespace Blog.Data.Migrations
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
                     b.Property<string>("AuthorId")
-                        .IsRequired()
                         .HasColumnType("text");
 
                     b.Property<string>("Body")
@@ -184,7 +176,6 @@ namespace Blog.Data.Migrations
                         .HasColumnType("timestamp with time zone");
 
                     b.Property<string>("ModeratedBody")
-                        .IsRequired()
                         .HasMaxLength(500)
                         .HasColumnType("character varying(500)");
 
@@ -192,7 +183,6 @@ namespace Blog.Data.Migrations
                         .HasColumnType("integer");
 
                     b.Property<string>("ModeratorId")
-                        .IsRequired()
                         .HasColumnType("text");
 
                     b.Property<int>("PostId")
@@ -226,7 +216,6 @@ namespace Blog.Data.Migrations
                         .HasColumnType("character varying(200)");
 
                     b.Property<string>("AuthorId")
-                        .IsRequired()
                         .HasColumnType("text");
 
                     b.Property<int>("BlogId")
@@ -237,18 +226,15 @@ namespace Blog.Data.Migrations
                         .HasColumnType("text");
 
                     b.Property<string>("ContentType")
-                        .IsRequired()
                         .HasColumnType("text");
 
                     b.Property<DateTime>("Created")
                         .HasColumnType("timestamp with time zone");
 
                     b.Property<byte[]>("ImageData")
-                        .IsRequired()
                         .HasColumnType("bytea");
 
                     b.Property<string>("Slug")
-                        .IsRequired()
                         .HasColumnType("text");
 
                     b.Property<int>("Status")
@@ -280,7 +266,6 @@ namespace Blog.Data.Migrations
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
                     b.Property<string>("AuthorId")
-                        .IsRequired()
                         .HasColumnType("text");
 
                     b.Property<int>("PostId")
@@ -436,9 +421,7 @@ namespace Blog.Data.Migrations
                 {
                     b.HasOne("Blog.Models.BlogUser", "Author")
                         .WithMany("Blogs")
-                        .HasForeignKey("AuthorId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .HasForeignKey("AuthorId");
 
                     b.Navigation("Author");
                 });
@@ -447,15 +430,11 @@ namespace Blog.Data.Migrations
                 {
                     b.HasOne("Blog.Models.BlogUser", "Author")
                         .WithMany()
-                        .HasForeignKey("AuthorId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .HasForeignKey("AuthorId");
 
                     b.HasOne("Blog.Models.BlogUser", "Moderator")
                         .WithMany()
-                        .HasForeignKey("ModeratorId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .HasForeignKey("ModeratorId");
 
                     b.HasOne("Blog.Models.Post", "Post")
                         .WithMany("Comments")
@@ -474,9 +453,7 @@ namespace Blog.Data.Migrations
                 {
                     b.HasOne("Blog.Models.BlogUser", "Author")
                         .WithMany("Posts")
-                        .HasForeignKey("AuthorId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .HasForeignKey("AuthorId");
 
                     b.HasOne("Blog.Models.Blog", "Blog")
                         .WithMany("Posts")
@@ -493,9 +470,7 @@ namespace Blog.Data.Migrations
                 {
                     b.HasOne("Blog.Models.BlogUser", "Author")
                         .WithMany()
-                        .HasForeignKey("AuthorId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .HasForeignKey("AuthorId");
 
                     b.HasOne("Blog.Models.Post", "Post")
                         .WithMany("Tags")

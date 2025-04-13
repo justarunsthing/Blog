@@ -50,8 +50,6 @@ namespace Blog.Controllers
         // GET: Blogs/Create
         public IActionResult Create()
         {
-            ViewData["AuthorId"] = new SelectList(_context.Users, "Id", "Id");
-
             return View();
         }
 
@@ -60,7 +58,7 @@ namespace Blog.Controllers
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("Id,AuthorId,Name,Description,Created,Updated,ImageData,ContentType")] Blog.Models.Blog blog)
+        public async Task<IActionResult> Create([Bind("Name,Description,Image")] Blog.Models.Blog blog)
         {
             if (ModelState.IsValid)
             {
