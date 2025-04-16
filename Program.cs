@@ -1,5 +1,6 @@
 using Blog.Data;
 using Blog.Models;
+using Blog.Services;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 
@@ -24,7 +25,17 @@ builder.Services.AddIdentity<BlogUser, IdentityRole>(options => options.SignIn.R
 builder.Services.AddControllersWithViews();
 builder.Services.AddRazorPages();
 
+builder.Services.AddScoped<DataService>();
+
 var app = builder.Build();
+
+using (var scope = app.Services.CreateScope())
+{
+    var serviceProvider = scope.ServiceProvider;
+    var dataService = serviceProvider.GetService<DataService>();
+
+    await dataService.ManageDataAync();
+}
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
