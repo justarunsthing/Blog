@@ -41,12 +41,6 @@ using (var scope = app.Services.CreateScope())
     await dataService.ManageDataAync();
 }
 
-// Configure MailSettings
-//var config = new ConfigurationBuilder()
-//    .AddJsonFile("appsettings.json")
-//    .AddEnvironmentVariables()
-//    .Build();
-
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
