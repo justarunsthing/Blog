@@ -1,6 +1,8 @@
 using Blog.Data;
+using Blog.Interfaces;
 using Blog.Models;
 using Blog.Services;
+using Blog.ViewModels;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 
@@ -26,6 +28,8 @@ builder.Services.AddControllersWithViews();
 builder.Services.AddRazorPages();
 
 builder.Services.AddScoped<DataService>();
+builder.Services.Configure<MailSettings>(builder.Configuration.GetSection("MailSettings"));
+builder.Services.AddScoped<IBlogEmailSender, EmailService>();
 
 var app = builder.Build();
 
@@ -36,6 +40,12 @@ using (var scope = app.Services.CreateScope())
 
     await dataService.ManageDataAync();
 }
+
+// Configure MailSettings
+//var config = new ConfigurationBuilder()
+//    .AddJsonFile("appsettings.json")
+//    .AddEnvironmentVariables()
+//    .Build();
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
