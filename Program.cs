@@ -1,8 +1,8 @@
 using Blog.Data;
-using Blog.Interfaces;
 using Blog.Models;
 using Blog.Services;
 using Blog.ViewModels;
+using Blog.Interfaces;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 
@@ -38,6 +38,9 @@ builder.Services.AddScoped<IBlogEmailSender, EmailService>();
 
 // Register image service
 builder.Services.AddScoped<IImageService, ImageService>();
+
+// Register slug service
+builder.Services.AddScoped<ISlugService, SlugService>();
 
 var app = builder.Build();
 
