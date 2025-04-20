@@ -8,6 +8,7 @@ using Microsoft.EntityFrameworkCore;
 using Blog.Data;
 using Blog.Models;
 using Blog.Interfaces;
+using Microsoft.AspNetCore.Identity;
 
 namespace Blog.Controllers
 {
@@ -16,12 +17,14 @@ namespace Blog.Controllers
         private readonly ApplicationDbContext _context;
         private readonly ISlugService _slugService;
         private readonly IImageService _imageService;
+        private readonly UserManager<BlogUser> _userManager;
 
-        public PostsController(ApplicationDbContext context, ISlugService slugService, IImageService imageService)
+        public PostsController(ApplicationDbContext context, ISlugService slugService, IImageService imageService, UserManager<BlogUser> userManager)
         {
             _context = context;
             _slugService = slugService;
             _imageService = imageService;
+            _userManager = userManager;
         }
 
         // GET: Posts
@@ -33,9 +36,9 @@ namespace Blog.Controllers
         }
 
         // GET: Posts/Details/5
-        public async Task<IActionResult> Details(int? id)
+        public async Task<IActionResult> Details(string slug)
         {
-            if (id == null)
+            if (string.IsNullOrEmpty(slug))
             {
                 return NotFound();
             }
@@ -43,7 +46,8 @@ namespace Blog.Controllers
             var post = await _context.Posts
                 .Include(p => p.Author)
                 .Include(p => p.Blog)
-                .FirstOrDefaultAsync(m => m.Id == id);
+                .Include(p => p.Tags)
+                .FirstOrDefaultAsync(m => m.Slug == slug);
 
             if (post == null)
             {
@@ -71,6 +75,7 @@ namespace Blog.Controllers
         {
             if (ModelState.IsValid)
             {
+                var authorId = _userManager.GetUserId(User); 
                 var slug = _slugService.UrlFriendly(post.Title);
 
                 if (!_slugService.IsUnique(slug))
@@ -81,12 +86,25 @@ namespace Blog.Controllers
                     return View(post);
                 }
 
+                post.AuthorId = authorId;
                 post.Slug = slug;
                 post.ImageData = await _imageService.EncodeImageAsync(post.Image);
                 post.ContentType = _imageService.ContentType(post.Image);
                 post.Created = DateTime.UtcNow;
 
                 _context.Add(post);
+
+                await _context.SaveChangesAsync();
+
+                foreach (var tagText in tagValues)
+                {
+                    _context.Add(new Tag
+                    {
+                        PostId = post.Id,
+                        AuthorId = authorId,
+                        Text = tagText
+                    });
+                }
 
                 await _context.SaveChangesAsync();
 
