@@ -52,6 +52,14 @@
     <a asp-action="Index">Back to List</a>
 </div>
 
+
 @section Scripts {
-    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+    <script>
+        // Default font size
+        $('#Content').summernote({
+            placeholder: "Blog content",
+            tabsize: 2,
+            height: 120
+        });
+    </script>
 }
