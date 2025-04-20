@@ -1,4 +1,6 @@
 ﻿@model IEnumerable<Post>
+@using Blog.Interfaces
+@inject IImageService imageService
 
 @{
     ViewData["Title"] = "Index";
@@ -24,6 +26,9 @@
             <th>
                 @Html.DisplayNameFor(model => model.Status)
             </th>
+            <th>
+                @Html.DisplayNameFor(model => model.Image)
+            </th>
             <th></th>
         </tr>
     </thead>
@@ -42,6 +47,9 @@
             <td>
                 @Html.DisplayFor(modelItem => item.Status)
             </td>
+            <th>
+                <img class="img-fluid" width="200px" src="@imageService.DecodeImage(item.ImageData, item.ContentType)" />
+            </th>
             <td>
             <td>
                 <a asp-action="Edit" asp-route-id="@item.Id">Edit</a> |

@@ -15,11 +15,13 @@ namespace Blog.Controllers
     {
         private readonly ApplicationDbContext _context;
         private readonly ISlugService _slugService;
+        private readonly IImageService _imageService;
 
-        public PostsController(ApplicationDbContext context, ISlugService slugService)
+        public PostsController(ApplicationDbContext context, ISlugService slugService, IImageService imageService)
         {
             _context = context;
             _slugService = slugService;
+            _imageService = imageService;
         }
 
         // GET: Posts
@@ -69,8 +71,6 @@ namespace Blog.Controllers
         {
             if (ModelState.IsValid)
             {
-                post.Created = DateTime.UtcNow;
-
                 var slug = _slugService.UrlFriendly(post.Title);
 
                 if (!_slugService.IsUnique(slug))
@@ -82,6 +82,10 @@ namespace Blog.Controllers
                 }
 
                 post.Slug = slug;
+                post.ImageData = await _imageService.EncodeImageAsync(post.Image);
+                post.ContentType = _imageService.ContentType(post.Image);
+                post.Created = DateTime.UtcNow;
+
                 _context.Add(post);
 
                 await _context.SaveChangesAsync();
@@ -119,7 +123,7 @@ namespace Blog.Controllers
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, [Bind("Id,BlogId,Title,Abstract,Content,Status,Image")] Post post)
+        public async Task<IActionResult> Edit(int id, [Bind("Id,BlogId,Title,Abstract,Content,Status")] Post post, IFormFile newImage)
         {
             if (id != post.Id)
             {
@@ -130,9 +134,20 @@ namespace Blog.Controllers
             {
                 try
                 {
-                    post.Updated = DateTime.UtcNow;
+                    var currentPost = await _context.Posts.FindAsync(post.Id);
+                    currentPost.Title = post.Title;
+                    currentPost.Abstract = post.Abstract;
+                    currentPost.Content = post.Content;
+                    currentPost.Status = post.Status;
 
-                    _context.Update(post);
+                    if (newImage != null)
+                    {
+                        currentPost.ImageData = await _imageService.EncodeImageAsync(newImage);
+                        currentPost.ContentType = _imageService.ContentType(newImage);
+                    }
+
+                    currentPost.Updated = DateTime.UtcNow;
+
                     await _context.SaveChangesAsync();
                 }
                 catch (DbUpdateConcurrencyException)
