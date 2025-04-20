@@ -83,8 +83,6 @@
 
 
 @section Scripts {
-    <script src="~/js/custom.js"></script>
-
     @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
 
     <script>
@@ -94,5 +92,8 @@
             tabsize: 2,
             height: 120
         });
+
+        var tagValues = '@ViewData["TagValues"]';
     </script>
+    <script src="~/js/custom.js"></script>
 }
