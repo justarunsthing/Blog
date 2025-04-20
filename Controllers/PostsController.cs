@@ -124,7 +124,7 @@ namespace Blog.Controllers
                 return NotFound();
             }
 
-            var post = await _context.Posts.FindAsync(id);
+            var post = await _context.Posts.Include(p => p.Tags).FirstOrDefaultAsync(p => p.Id == id);
 
             if (post == null)
             {
@@ -132,6 +132,7 @@ namespace Blog.Controllers
             }
 
             ViewData["BlogId"] = new SelectList(_context.Blogs, "Id", "Name", post.BlogId);
+            ViewData["TagValues"] = string.Join(",", post.Tags.Select(t => t.Text));
 
             return View(post);
         }
@@ -141,7 +142,7 @@ namespace Blog.Controllers
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, [Bind("Id,BlogId,Title,Abstract,Content,Status")] Post post, IFormFile newImage)
+        public async Task<IActionResult> Edit(int id, [Bind("Id,BlogId,Title,Abstract,Content,Status")] Post post, IFormFile newImage, List<string> tagValues)
         {
             if (id != post.Id)
             {
@@ -152,7 +153,7 @@ namespace Blog.Controllers
             {
                 try
                 {
-                    var currentPost = await _context.Posts.FindAsync(post.Id);
+                    var currentPost = await _context.Posts.Include(p => p.Tags).FirstOrDefaultAsync(p => p.Id == post.Id);
                     currentPost.Title = post.Title;
                     currentPost.Abstract = post.Abstract;
                     currentPost.Content = post.Content;
@@ -162,6 +163,20 @@ namespace Blog.Controllers
                     {
                         currentPost.ImageData = await _imageService.EncodeImageAsync(newImage);
                         currentPost.ContentType = _imageService.ContentType(newImage);
+                    }
+
+                    // Clear any existing tags
+                    _context.Tags.RemoveRange(currentPost.Tags);
+
+                    // Add new tags
+                    foreach (var tagText in tagValues)
+                    {
+                        _context.Add(new Tag
+                        {
+                            PostId = post.Id,
+                            AuthorId = currentPost.AuthorId,
+                            Text = tagText
+                        });
                     }
 
                     currentPost.Updated = DateTime.UtcNow;
