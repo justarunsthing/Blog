@@ -34,3 +34,19 @@ function deleteTag() {
 $("form").on("submit", function () {
     $("#tags-list option").prop("selected", "selected");
 });
+
+// Populate any existing tags
+if (tagValues != '') {
+    var tagArray = tagValues.split(",");
+
+    for (var i = 0; i < tagArray.length; i++) {
+        replaceTag(tagArray[i], i);
+        index++;
+    }
+}
+
+function replaceTag(tag, index) {
+    var newOption = new Option(tag, tag);
+
+    document.getElementById("tags-list").options[index] = newOption;
+}
