@@ -31,13 +31,17 @@ namespace Blog.Areas.Identity.Pages.Account
         private readonly IUserEmailStore<BlogUser> _emailStore;
         private readonly ILogger<RegisterModel> _logger;
         private readonly IBlogEmailSender _emailSender;
+        private readonly IImageService _imageService;
+        private readonly IConfiguration _configuration;
 
         public RegisterModel(
             UserManager<BlogUser> userManager,
             IUserStore<BlogUser> userStore,
             SignInManager<BlogUser> signInManager,
             ILogger<RegisterModel> logger,
-            IBlogEmailSender emailSender)
+            IBlogEmailSender emailSender,
+            IImageService imageService,
+            IConfiguration configuration)
         {
             _userManager = userManager;
             _userStore = userStore;
@@ -45,6 +49,8 @@ namespace Blog.Areas.Identity.Pages.Account
             _signInManager = signInManager;
             _logger = logger;
             _emailSender = emailSender;
+            _imageService = imageService;
+            _configuration = configuration;
         }
 
         /// <summary>
@@ -114,6 +120,9 @@ namespace Blog.Areas.Identity.Pages.Account
             [Display(Name = "Confirm password")]
             [Compare("Password", ErrorMessage = "The password and confirmation password do not match.")]
             public string ConfirmPassword { get; set; }
+
+            [Display(Name = "Image")]
+            public IFormFile ImageFile { get; set; }
         }
 
         public async Task OnGetAsync(string returnUrl = null)
@@ -132,6 +141,8 @@ namespace Blog.Areas.Identity.Pages.Account
                 user.FirstName = Input.FirstName;
                 user.LastName = Input.LastName;
                 user.DisplayName = Input.DisplayName;
+                user.ImageData = (await _imageService.EncodeImageAsync(Input.ImageFile)) ?? await _imageService.EncodeImageAsync(_configuration["DefaultUserImage"]);
+                user.ContentType = Input.ImageFile == null ? Path.GetExtension(_configuration["DefaultUserImage"]) : _imageService.ContentType(Input.ImageFile);
 
                 await _userStore.SetUserNameAsync(user, Input.Email, CancellationToken.None);
                 await _emailStore.SetEmailAsync(user, Input.Email, CancellationToken.None);
