@@ -1,8 +1,12 @@
+using Blog.Data;
+using Blog.Enums;
 using Blog.Models;
+using X.PagedList.EF;
 using Blog.ViewModels;
 using Blog.Interfaces;
 using System.Diagnostics;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 
 namespace Blog.Controllers
 {
@@ -10,17 +14,26 @@ namespace Blog.Controllers
     {
         private readonly ILogger<HomeController> _logger;
         private readonly IBlogEmailSender _emailSender;
-        private readonly IImageService _imageService;
+        private readonly ApplicationDbContext _context;
 
-        public HomeController(ILogger<HomeController> logger, IBlogEmailSender emailSender)
+        public HomeController(ILogger<HomeController> logger, IBlogEmailSender emailSender, ApplicationDbContext context)
         {
             _logger = logger;
             _emailSender = emailSender;
+            _context = context;
         }
 
-        public IActionResult Index()
+        public async Task<IActionResult> IndexAsync(int? page)
         {
-            return View();
+            var pageNumber = page ?? 1;
+            var pageSize = 2;
+            var blogs =  _context.Blogs
+                .Where(b => b.Posts.Any(p => p.Status == ReadyStatus.Production))
+                .OrderByDescending(b => b.Created)
+                .Include(b => b.Author)
+                .ToPagedListAsync(pageNumber, pageSize);
+
+            return View(await blogs);
         }
 
         public IActionResult Privacy()
