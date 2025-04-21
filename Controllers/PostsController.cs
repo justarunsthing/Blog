@@ -35,7 +35,7 @@ namespace Blog.Controllers
             return View(await applicationDbContext.ToListAsync());
         }
 
-        // GET: Posts/Details/5
+        // GET: Posts/Details/{slug}
         public async Task<IActionResult> Details(string slug)
         {
             if (string.IsNullOrEmpty(slug))
