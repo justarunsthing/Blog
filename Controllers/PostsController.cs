@@ -75,16 +75,29 @@ namespace Blog.Controllers
         {
             if (ModelState.IsValid)
             {
-                var authorId = _userManager.GetUserId(User); 
                 var slug = _slugService.UrlFriendly(post.Title);
+                var slugError = false;
+
+                if (string.IsNullOrEmpty(slug))
+                {
+                    slugError = true;
+                    ModelState.AddModelError("", "Title cannot be empty for a unique slug");
+                }
 
                 if (!_slugService.IsUnique(slug))
                 {
-                    ModelState.AddModelError("Title", "The title you provided cannot be used for unique slug");
+                    slugError = true;
+                    ModelState.AddModelError("Title", "The title you provided cannot be used for a unique slug");
+                }
+
+                if (slugError)
+                {
                     ViewData["TagValues"] = string.Join(",", tagValues);
 
                     return View(post);
                 }
+
+                var authorId = _userManager.GetUserId(User);
 
                 post.AuthorId = authorId;
                 post.Slug = slug;
@@ -158,6 +171,24 @@ namespace Blog.Controllers
                     currentPost.Abstract = post.Abstract;
                     currentPost.Content = post.Content;
                     currentPost.Status = post.Status;
+
+                    var newSlug = _slugService.UrlFriendly(post.Title);
+
+                    if (newSlug != currentPost.Slug)
+                    {
+                        if (_slugService.IsUnique(newSlug))
+                        {
+                            currentPost.Title = post.Title;
+                            currentPost.Slug = newSlug;
+                        }
+                        else
+                        {
+                            ModelState.AddModelError("Title", "The title you provided cannot be used for a unique slug");
+                            ViewData["TagValues"] = string.Join(",", tagValues);
+
+                            return View(post);
+                        }
+                    }
 
                     if (newImage != null)
                     {
