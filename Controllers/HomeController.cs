@@ -26,7 +26,7 @@ namespace Blog.Controllers
         public async Task<IActionResult> IndexAsync(int? page)
         {
             var pageNumber = page ?? 1;
-            var pageSize = 2;
+            var pageSize = 5;
             var blogs =  _context.Blogs
                 .Where(b => b.Posts.Any(p => p.Status == ReadyStatus.Production))
                 .OrderByDescending(b => b.Created)

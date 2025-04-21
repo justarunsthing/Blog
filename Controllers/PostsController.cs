@@ -9,6 +9,9 @@ using Blog.Data;
 using Blog.Models;
 using Blog.Interfaces;
 using Microsoft.AspNetCore.Identity;
+using Blog.Enums;
+using X.PagedList.EF;
+using Blog.Services;
 
 namespace Blog.Controllers
 {
@@ -18,13 +21,15 @@ namespace Blog.Controllers
         private readonly ISlugService _slugService;
         private readonly IImageService _imageService;
         private readonly UserManager<BlogUser> _userManager;
+        private readonly SearchService _searchService;
 
-        public PostsController(ApplicationDbContext context, ISlugService slugService, IImageService imageService, UserManager<BlogUser> userManager)
+        public PostsController(ApplicationDbContext context, ISlugService slugService, IImageService imageService, UserManager<BlogUser> userManager, SearchService searchService)
         {
             _context = context;
             _slugService = slugService;
             _imageService = imageService;
             _userManager = userManager;
+            _searchService = searchService;
         }
 
         // GET: Posts
@@ -35,16 +40,32 @@ namespace Blog.Controllers
             return View(await applicationDbContext.ToListAsync());
         }
 
-        public async Task<IActionResult> BlogPostIndex(int? id)
+        public async Task<IActionResult> BlogPostIndex(int? id, int? page)
         {
             if (id == null)
             {
                 return NotFound();
             }
 
-            var posts = await _context.Posts.Where(p => p.BlogId == id).ToListAsync();
+            var pageNumber = page ?? 1;
+            var pageSize = 5;
+            var posts = await _context.Posts
+                .Where(p => p.BlogId == id && p.Status == ReadyStatus.Production)
+                .OrderByDescending(p => p.Created)
+                .ToPagedListAsync(pageNumber, pageSize);
 
-            return View("Index", posts);
+            return View(posts);
+        }
+
+        public async Task<IActionResult> SearchIndex(int? page, string searchTerm)
+        {
+            ViewData["SearchTerm"] = searchTerm;
+
+            var pageNumber = page ?? 1;
+            var pageSize = 5;
+            var posts = _searchService.Search(searchTerm);
+
+            return View(await posts.ToPagedListAsync(pageNumber, pageSize));
         }
 
         // GET: Posts/Details/{slug}
