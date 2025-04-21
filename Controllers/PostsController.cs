@@ -35,6 +35,18 @@ namespace Blog.Controllers
             return View(await applicationDbContext.ToListAsync());
         }
 
+        public async Task<IActionResult> BlogPostIndex(int? id)
+        {
+            if (id == null)
+            {
+                return NotFound();
+            }
+
+            var posts = await _context.Posts.Where(p => p.BlogId == id).ToListAsync();
+
+            return View("Index", posts);
+        }
+
         // GET: Posts/Details/{slug}
         public async Task<IActionResult> Details(string slug)
         {
