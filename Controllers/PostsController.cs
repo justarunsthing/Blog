@@ -80,6 +80,8 @@ namespace Blog.Controllers
                 .Include(p => p.Author)
                 .Include(p => p.Blog)
                 .Include(p => p.Tags)
+                .Include(p => p.Comments)
+                .ThenInclude(c => c.Author) // Grabs authors of the comments
                 .FirstOrDefaultAsync(m => m.Slug == slug);
 
             if (post == null)
