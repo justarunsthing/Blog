@@ -1,17 +1,54 @@
 ﻿@using Blog.Enums
 @using Blog.Interfaces
+@using Blog.ViewModels
 @using Microsoft.AspNetCore.Identity
-@model Post
+@model PostDetailViewModel
 @inject IImageService imageService
 @inject UserManager<BlogUser> userManager
 
-@{
-    ViewData["Title"] = "Details";
-}
+<article>
+    <div class="row">
+        <div class="col-9 border-right">
+            @Html.Raw(Model.Post.Content)
+        </div>
+        <div class="col-3 text-center font-weight-bold h6">
+            <div class="card">
+                <img class="card-img-top" src="" alt="Tags" />
+                <div class="card-body">
+                    <h4 class="card-title">
+                        System Tags
+                    </h4>
+                    <div class="tagView">
+                        @foreach (var tag in Model.Tags)
+                        {
+                            <a asp-action="TagIndex" asp-route-tag="@tag" class="mb-1 btn btn-sm btn-warning btn-outline-dark">
+                                #@tag
+                            </a>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</article>
+<article>
+    <hr />
+    <h3 class="text-center font-weight-bold">
+        Tags
+    </h3>
+    <div class="col text-center">
+        @foreach (var tag in Model.Post.Tags.ToList())
+        {
+            <a asp-action="TagIndex" asp-route-tag="@tag.Text.ToLower()" class="mb-1 btn btn-sm btn-waring btn-outline-dark">
+                #@tag.Text
+            </a>
+        }
+    </div>
+</article>
 
 <div class="container">
     <!-- Post Content-->
-    <article class="mb-4">
+@*     <article class="mb-4">
         <div class="container px-4 px-lg-5">
             <div class="row gx-4 gx-lg-5 justify-content-center">
                 <div class="col-md-10 col-lg-8 col-xl-7">
@@ -19,11 +56,8 @@
                 </div>
             </div>
         </div>
-    </article>
-
-    <hr />
-
-    <article>
+    </article> *@
+@*     <article>
         <div class="row">
             <div class="col text-center h3">
                 Custom Post Tags
@@ -37,15 +71,12 @@
                 }
             </div>
         </div>
-    </article>
-
-    <hr />
-
+    </article> *@
     <div>
         @if (User.Identity.IsAuthenticated)
         {
             <form asp-controller="Comments" asp-action="Create" method="post">
-                @Html.Hidden("PostId", Model.Id)
+                @Html.Hidden("PostId", Model.Post.Id)
 
                 <div class="form-group">
                     <label class="h2 control-label font-weight-bold">
@@ -60,7 +91,7 @@
         }
         else
         {
-            <a class="btn w-100 btn-sm btn-dark" asp-area="Identity" asp-page="/Account/Login" asp-route-returnUrl="~/Posts/Details?slug=@Model.Slug">
+            <a class="btn w-100 btn-sm btn-dark" asp-area="Identity" asp-page="/Account/Login" asp-route-returnUrl="~/Posts/Details?slug=@Model.Post.Slug">
                 Login to add comment
             </a>
         }
@@ -69,14 +100,14 @@
     <hr />
 
     <span id="comment-section" class="btn btn-sm btn-dark w-100">
-        @Model.Comments.Count Comment(s)
+        @Model.Post.Comments.Count Comment(s)
     </span>
 
     @{
         var counter = 0;
     }
 
-    @foreach (var comment in Model.Comments.OrderByDescending(c => c.Created))
+    @foreach (var comment in Model.Post.Comments.OrderByDescending(c => c.Created))
     {
         <div class="d-flex align-items-center">
             <div class="flex-shrink-0">
