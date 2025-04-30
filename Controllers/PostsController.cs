@@ -12,6 +12,7 @@ using Microsoft.AspNetCore.Identity;
 using Blog.Enums;
 using X.PagedList.EF;
 using Blog.Services;
+using Blog.ViewModels;
 
 namespace Blog.Controllers
 {
@@ -71,6 +72,8 @@ namespace Blog.Controllers
         // GET: Posts/Details/{slug}
         public async Task<IActionResult> Details(string slug)
         {
+            ViewData["Title"] = "Post Details Page";
+
             if (string.IsNullOrEmpty(slug))
             {
                 return NotFound();
@@ -78,10 +81,11 @@ namespace Blog.Controllers
 
             var post = await _context.Posts
                 .Include(p => p.Author)
-                .Include(p => p.Blog)
                 .Include(p => p.Tags)
                 .Include(p => p.Comments)
                 .ThenInclude(c => c.Author) // Grabs authors of the comments
+                .Include(p => p.Comments)
+                .ThenInclude(c => c.Moderator)
                 .FirstOrDefaultAsync(m => m.Slug == slug);
 
             if (post == null)
@@ -89,7 +93,19 @@ namespace Blog.Controllers
                 return NotFound();
             }
 
-            return View(post);
+            var viewModel = new PostDetailViewModel
+            {
+                Post = post,
+                Tags = _context.Tags
+                        .Select(t => t.Text.ToLower())
+                        .Distinct().ToList()
+            };
+
+            ViewData["HeaderImage"] = _imageService.DecodeImage(post.ImageData, post.ContentType);
+            ViewData["MainText"] = post.Title;
+            ViewData["SubText"] = post.Abstract;
+
+            return View(viewModel);
         }
 
         // GET: Posts/Create
