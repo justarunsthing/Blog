@@ -16,7 +16,6 @@ namespace Blog.Models
         [StringLength(50, ErrorMessage = "The {0} must be at least {2} and no more han {1} characters", MinimumLength = 2)]
         public string LastName { get; set; }
 
-        [Required]
         [Display(Name = "Display Name")]
         [StringLength(50, ErrorMessage = "The {0} must be at least {2} and no more han {1} characters", MinimumLength = 2)]
         public string DisplayName { get; set; }
