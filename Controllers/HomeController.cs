@@ -36,11 +36,6 @@ namespace Blog.Controllers
             return View(await blogs);
         }
 
-        public IActionResult Privacy()
-        {
-            return View();
-        }
-
         public IActionResult About()
         {
             return View();
