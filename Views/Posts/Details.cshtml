@@ -91,7 +91,7 @@
         }
         else
         {
-            <a class="btn w-100 btn-sm btn-dark" asp-area="Identity" asp-page="/Account/Login" asp-route-returnUrl="~/Posts/Details?slug=@Model.Post.Slug">
+            <a class="btn w-100 btn-dark" asp-area="Identity" asp-page="/Account/Login" asp-route-returnUrl="~/Posts/Details?slug=@Model.Post.Slug">
                 Login to add comment
             </a>
         }
@@ -99,7 +99,7 @@
 
     <hr />
 
-    <span id="comment-section" class="btn btn-sm btn-dark w-100">
+    <span id="comment-section" class="btn btn-dark w-100">
         @Model.Post.Comments.Count Comment(s)
     </span>
 

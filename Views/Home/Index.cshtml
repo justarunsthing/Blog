@@ -9,7 +9,7 @@
 @model IPagedList<Blog>
 
 @{
-    ViewData["Title"] = "Home Page";
+    ViewData["Title"] = "Arun's Tech Blog - Home";
 }
 
 <div class="container">
@@ -34,7 +34,7 @@
                         </div>
                         <br />
                         <div class="text-center">
-                            <a class="btn btn-dark btn-sm w-100 mb-2" asp-controller="Posts" asp-action="BlogPostIndex" asp-route-id="@blog.Id">
+                            <a class="btn btn-dark w-100 mb-2" asp-controller="Posts" asp-action="BlogPostIndex" asp-route-id="@blog.Id">
                                 Read Posts
                             </a>
                         </div>

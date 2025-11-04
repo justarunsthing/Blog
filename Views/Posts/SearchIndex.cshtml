@@ -27,7 +27,7 @@
 					</div>
 					<br />
 					<div class="text-center">
-						<a class="btn btn-dark btn-sm mb-2 w-100" asp-controller="Posts" asp-action="Details" asp-route-slug="@post.Slug">Read More</a>
+						<a class="btn btn-dark mb-2 w-100" asp-controller="Posts" asp-action="Details" asp-route-slug="@post.Slug">Read More</a>
 					</div>
 				</div>
 				<img class="card-img-bottom" src="@imageService.DecodeImage(post.ImageData, post.ContentType)" />
