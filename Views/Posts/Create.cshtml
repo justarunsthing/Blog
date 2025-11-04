@@ -4,12 +4,11 @@
     ViewData["Title"] = "Create";
 }
 
-<h1>Create</h1>
-
-<h4>Post</h4>
+<h1>Create Pos</h1>
 <hr />
+
 <div class="row">
-    <div class="col-md-8">
+    <div class="col">
         <form asp-action="Create" enctype="multipart/form-data">
             <div asp-validation-summary="ModelOnly" class="text-danger"></div>
             <div class="form-group">
@@ -51,10 +50,10 @@
                         </div>
                         <div class="row">
                             <div class="col">
-                                <button onclick="addTag()" name="Add" type="button" class="btn btn-dark btn-sm w-100">Add</button>
+                                <button onclick="addTag()" name="Add" type="button" class="btn btn-dark w-100">Add</button>
                             </div>
                             <div class="col">
-                                <button onclick="deleteTag()" name="Delete" type="button" class="btn btn-danger btn-sm w-100">Delete</button>
+                                <button onclick="deleteTag()" name="Delete" type="button" class="btn btn-danger w-100">Delete</button>
                             </div>
                         </div>
                     </div>
@@ -71,14 +70,14 @@
                 <span asp-validation-for="Status" class="text-danger"></span>
             </div>
             <div class="form-group">
-                <input type="submit" value="Create" class="btn btn-primary" />
+                <input type="submit" value="Create" class="btn btn-primary w-100 my-3" />
             </div>
         </form>
     </div>
 </div>
 
 <div>
-    <a asp-action="Index">Back to List</a>
+    <a asp-action="Index" class="text-decoration-underline">Back to List</a>
 </div>
 
 
