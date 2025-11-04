@@ -42,7 +42,7 @@
                         @if (User.IsInRole(BlogRole.Administrator.ToString()))
                         {
                             <div class="text-center">
-                                <a class="btn btn-dark btn-sm w-100 mb-2" asp-controller="Posts" asp-action="Create" asp-route-id="@blog.Id">
+                                <a class="btn btn-dark w-100 mb-2" asp-controller="Posts" asp-action="Create" asp-route-id="@blog.Id">
                                     Create Post
                                 </a>
                             </div>
@@ -51,7 +51,7 @@
                         @if (User.IsInRole(BlogRole.Administrator.ToString()))
                         {
                             <div class="text-center">
-                                <a class="btn btn-dark btn-sm w-100 mb-2" asp-controller="Blogs" asp-action="Edit" asp-route-id="@blog.Id">
+                                <a class="btn btn-dark w-100 mb-2" asp-controller="Blogs" asp-action="Edit" asp-route-id="@blog.Id">
                                     Edit Blog
                                 </a>
                             </div>

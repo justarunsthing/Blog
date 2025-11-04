@@ -44,7 +44,7 @@
                         @if (User.IsInRole(BlogRole.Administrator.ToString()) || isAuthor)
                         {
                             <div class="text-center">
-                                <a class="btn btn-success btn-sm w-100 border-dark" asp-controller="Posts" asp-action="Edit" asp-route-id="@post.Id">
+                                <a class="btn btn-success w-100 border-dark" asp-controller="Posts" asp-action="Edit" asp-route-id="@post.Id">
                                     Edit
                                 </a>
                             </div>
