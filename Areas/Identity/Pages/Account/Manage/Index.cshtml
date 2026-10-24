@@ -20,11 +20,9 @@
                 <label asp-for="Input.PhoneNumber" class="form-label"></label>
                 <span asp-validation-for="Input.PhoneNumber" class="text-danger"></span>
             </div>
-            <div class="form-floating mb-3">
-                <div class="custom-file">
-                    <label asp-for="Input.ImageFile" class="control-label custom-file-label"></label>
-                    <input type="file" asp-for="Input.ImageFile" class="form-control custom-file-input" accept=".jpg,.png,.gif,.jpeg" />
-                </div>
+            <div class="form-group">
+                <label asp-for="Input.ImageFile" class="form-label"></label>
+                <input type="file" asp-for="Input.ImageFile" class="form-control" accept=".jpg,.png,.gif,.jpeg" />
             </div>
             <button id="update-profile-button" type="submit" class="w-100 btn btn-lg btn-primary mb-3">Save</button>
         </form>

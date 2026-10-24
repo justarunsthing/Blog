@@ -3,19 +3,28 @@
 @inject IImageService imageService
 
 @{
-    ViewData["Title"] = "Index";
+    ViewData["Title"] = "Blogs";
+    ViewData["MainText"] = "Blogs";
+    ViewData["SubText"] = "Every blog, including ones still waiting on a published post.";
+    ViewData["HeaderImage"] = "/img/home-bg.jpg";
 }
 
-<h1>Index</h1>
+<div class="section-head">
+    <div>
+        <p class="eyebrow">Library</p>
+        <h2>All blogs</h2>
+    </div>
+</div>
 
 @if (User.IsInRole("Administrator"))
 {
     <p>
-        <a asp-action="Create">Create New</a>
+        <a class="btn btn-dark mb-3" asp-action="Create">New blog</a>
     </p>
 }
 
-<table class="table">
+<div class="table-wrap">
+<table class="table align-middle">
     <thead>
         <tr>
             <th>
@@ -64,3 +73,4 @@
 }
     </tbody>
 </table>
+</div>

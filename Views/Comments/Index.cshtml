@@ -1,15 +1,24 @@
 ﻿@model IEnumerable<Comment>
 
 @{
-    ViewData["Title"] = "Index";
+    ViewData["Title"] = "Comments";
+    ViewData["MainText"] = "Comments";
+    ViewData["SubText"] = "Every comment on the site.";
+    ViewData["HeaderImage"] = "/img/damian-zaleski-RYyr-k3Ysqg-unsplash.jpg";
 }
 
-<h1>Index</h1>
+<div class="section-head">
+    <div>
+        <p class="eyebrow">Moderation</p>
+        <h2>All comments</h2>
+    </div>
+</div>
 
 <p>
-    <a asp-action="Create">Create New</a>
+    <a class="btn btn-dark mb-3" asp-action="Create">New comment</a>
 </p>
-<table class="table">
+<div class="table-wrap">
+<table class="table align-middle">
     <thead>
         <tr>
             <th>
@@ -87,3 +96,4 @@
 }
     </tbody>
 </table>
+</div>

@@ -1,10 +1,14 @@
 ﻿@model ErrorViewModel
 @{
     ViewData["Title"] = "Error";
+    ViewData["MainText"] = "Something went wrong";
+    ViewData["SubText"] = "The page could not be finished.";
+    ViewData["HeaderImage"] = "/img/nasa-Q1p7bh3SHj8-unsplash.jpg";
 }
 
-<h1 class="text-danger">Error.</h1>
-<h2 class="text-danger">An error occurred while processing your request.</h2>
+<div class="panel">
+<h1>Something went wrong</h1>
+<p>An error occurred while processing your request.</p>
 
 @if (Model.ShowRequestId)
 {
@@ -23,3 +27,4 @@
     For local debugging, enable the <strong>Development</strong> environment by setting the <strong>ASPNETCORE_ENVIRONMENT</strong> environment variable to <strong>Development</strong>
     and restarting the app.
 </p>
+</div>

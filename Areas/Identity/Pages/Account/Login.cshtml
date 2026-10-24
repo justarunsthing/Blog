@@ -3,14 +3,15 @@
 
 @{
     ViewData["Title"] = "justarunsthing's Tech Blog - Login";
+    ViewData["MainText"] = "Welcome back";
+    ViewData["SubText"] = "Sign in to comment and manage your posts.";
+    ViewData["HeaderImage"] = "/img/pexels-pixabay-270408.jpg";
 }
 
-<div class="row">
-    <div class="col-lg-8 col-md-10 mx-auto">
-        <section>
+<div class="auth-card">
             <form id="account" method="post">
+                <p class="eyebrow">Account</p>
                 <h2>Log in</h2>
-                <hr />
                 <div asp-validation-summary="ModelOnly" class="text-danger" role="alert"></div>
                 <div class="form-floating mb-3">
                     <input asp-for="Input.Email" class="form-control" autocomplete="username" aria-required="true" placeholder="name@example.com" />
@@ -43,8 +44,6 @@
                     </p>
                 </div>
             </form>
-        </section>
-    </div>
 </div>
 
 @section Scripts {

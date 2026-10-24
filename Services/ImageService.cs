@@ -11,10 +11,29 @@ namespace Blog.Services
 
         public string DecodeImage(byte[] data, string type)
         {
-            if (data == null || type == null)
+            if (data == null || string.IsNullOrWhiteSpace(type))
                 return null;
 
-            return $"data:image/{type};base64,{Convert.ToBase64String(data)}";
+            var mime = type.Contains('/') ? type : MimeFromExtension(type);
+
+            return $"data:{mime};base64,{Convert.ToBase64String(data)}";
+        }
+
+        private static string MimeFromExtension(string type)
+        {
+            switch (type.Trim().TrimStart('.').ToLowerInvariant())
+            {
+                case "png":
+                    return "image/png";
+                case "gif":
+                    return "image/gif";
+                case "webp":
+                    return "image/webp";
+                case "bmp":
+                    return "image/bmp";
+                default:
+                    return "image/jpeg";
+            }
         }
 
         public async Task<byte[]> EncodeImageAsync(IFormFile file)

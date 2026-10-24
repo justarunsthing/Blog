@@ -1,23 +1,18 @@
 ﻿@{
-    if (ViewData.TryGetValue("ParentLayout", out var parentLayout) && parentLayout !=  null)
-    {
-        Layout = parentLayout.ToString();
-    }
-    else
-    {
-        Layout = "/Areas/Identity/Pages/_Layout.cshtml";
-    }
+    Layout = "/Views/Shared/_Layout.cshtml";
+    ViewData["MainText"] = "Your account";
+    ViewData["SubText"] = "Profile, email, and password.";
+    ViewData["HeaderImage"] = "/img/damian-zaleski-RYyr-k3Ysqg-unsplash.jpg";
 }
 
-<h1>Manage your account</h1>
-
-<div class="container">
-    <hr />
-    <div class="row">
+<div class="manage-shell">
+    <p class="eyebrow">Account</p>
+    <h1>Manage your account</h1>
+    <div class="row g-4">
         <div class="col-md-3">
             <partial name="_ManageNav" />
         </div>
-        <div class="col-md-9">
+        <div class="col-md-9 manage-panel">
             @RenderBody()
         </div>
     </div>

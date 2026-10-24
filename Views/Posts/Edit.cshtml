@@ -1,15 +1,15 @@
 ﻿@model Post
 @using Blog.Enums
 @{
-    ViewData["Title"] = "Edit";
+    ViewData["Title"] = "Edit post";
+    ViewData["MainText"] = "Edit post";
+    ViewData["SubText"] = "Revise the draft, the cover, or the tags.";
+    ViewData["HeaderImage"] = "/img/tim-mossholder-IQJbbw72PZc-unsplash.jpg";
 }
 
-<h1>Edit</h1>
-
-<h4>Post</h4>
-<hr />
-<div class="row">
-    <div class="col">
+<div class="editor">
+    <p class="eyebrow">Writing</p>
+    <h1>Edit post</h1>
         <form asp-action="Edit" enctype="multipart/form-data">
             <div asp-validation-summary="ModelOnly" class="text-danger"></div>
             <input type="hidden" asp-for="Id" />
@@ -75,11 +75,7 @@
                 <input type="submit" value="Save" class="btn btn-primary w-100 my-3" />
             </div>
         </form>
-    </div>
-</div>
-
-<div>
-    <a asp-action="Index" class="text-decoration-underline">Back to List</a>
+    <a asp-action="Index">Back to posts</a>
 </div>
 
 @section Scripts {
@@ -88,7 +84,7 @@
         $('#Content').summernote({
             placeholder: "Blog content",
             tabsize: 2,
-            height: 120
+            height: 280
         });
 
         let tagValues = '@ViewData["TagValues"]';

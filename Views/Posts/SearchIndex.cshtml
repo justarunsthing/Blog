@@ -7,50 +7,57 @@
 @inject IImageService imageService
 @model IPagedList<Post>
 
-<div class="row">
-	@foreach (var post in Model)
-	{
-		<div class="col-sm-2 col-lg-4 mt-3">
-			<div class="card border-dark">
-				<div class="card-body text-center">
-					<div class="bg-warning">
-						<hr class="card-hr" />
-						<h5 class="card-title">
-							@post.Title
-						</h5>
-						<hr class="card-hr" />
-					</div>
-					<div>
-						<p class="card-text">
-							@post.Abstract
-						</p>
-					</div>
-					<br />
-					<div class="text-center">
-						<a class="btn btn-dark mb-2 w-100" asp-controller="Posts" asp-action="Details" asp-route-slug="@post.Slug">Read More</a>
-					</div>
-				</div>
-				<img class="card-img-bottom" src="@imageService.DecodeImage(post.ImageData, post.ContentType)" />
-			</div>
-		</div>
-	}
-</div>
+@{
+    ViewData["Title"] = "Search";
+    ViewData["MainText"] = "Search";
+    ViewData["SubText"] = string.IsNullOrWhiteSpace(ViewData["SearchTerm"] as string)
+        ? "Look through published posts."
+        : $"Results for \"{ViewData["SearchTerm"]}\"";
+    ViewData["HeaderImage"] = "/img/drew-beamer-3SIXZisims4-unsplash.jpg";
+    ViewData["ShowSearchBar"] = true;
+}
 
-<hr />
+@if (!Model.Any())
+{
+    <div class="empty-state">
+        <p>No published posts matched that search.</p>
+    </div>
+}
+else
+{
+    <div class="story-grid">
+        @foreach (var post in Model)
+        {
+            var image = imageService.DecodeImage(post.ImageData, post.ContentType);
+            if (string.IsNullOrEmpty(image))
+            {
+                image = "/img/post-sample-image.jpg";
+            }
 
-<!-- Pagination -->
-<div class="row">
-	<div class="col h3">
-		Page @(Model.PageCount < Model.PageNumber ? 0 : Model.PageNumber) of @Model.PageCount
-	</div>
-</div>
-<div class="row">
-	<div class="col">
-		@Html.PagedListPager(Model, page => Url.Action("SearchIndex", new { page = page, searchTerm = ViewData["SearchTerm"] }),
-		new PagedListRenderOptions
-		{
-			LiElementClasses = new string[] { "page-item" },
-			PageClasses = new string[] { "page-link" }
-		})
-	</div>
-</div>
+            <article class="story-card">
+                <a class="story-card-media" asp-action="Details" asp-route-slug="@post.Slug">
+                    <img src="@image" alt="" />
+                </a>
+                <div class="story-card-body">
+                    <p class="story-meta">@post.Created.ToString("dd MMM yyyy")</p>
+                    <h3>@post.Title</h3>
+                    <p class="card-text">@post.Abstract</p>
+                    <div class="story-actions">
+                        <a class="btn btn-dark" asp-action="Details" asp-route-slug="@post.Slug">Read</a>
+                    </div>
+                </div>
+            </article>
+        }
+    </div>
+}
+
+<nav class="pager-bar" aria-label="Search pages">
+    <p>Page @(Model.PageCount < Model.PageNumber ? 0 : Model.PageNumber) of @Model.PageCount</p>
+    @Html.PagedListPager(Model, page => Url.Action("SearchIndex", new { page = page, searchTerm = ViewData["SearchTerm"] }),
+        new PagedListRenderOptions
+        {
+            UlElementClasses = new string[] { "pagination", "mb-0" },
+            LiElementClasses = new string[] { "page-item" },
+            PageClasses = new string[] { "page-link" }
+        })
+</nav>

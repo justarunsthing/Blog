@@ -3,15 +3,24 @@
 @inject IImageService imageService
 
 @{
-    ViewData["Title"] = "Index";
+    ViewData["Title"] = "Posts";
+    ViewData["MainText"] = "All posts";
+    ViewData["SubText"] = "Drafts and published pieces, in one list.";
+    ViewData["HeaderImage"] = "/img/post-sample-image.jpg";
 }
 
-<h1>Index</h1>
+<div class="section-head">
+    <div>
+        <p class="eyebrow">Library</p>
+        <h2>All posts</h2>
+    </div>
+</div>
 
 <p>
-    <a asp-action="Create">Create New</a>
+    <a class="btn btn-dark mb-3" asp-action="Create">New post</a>
 </p>
-<table class="table">
+<div class="table-wrap">
+<table class="table align-middle">
     <thead>
         <tr>
             <th>
@@ -51,7 +60,6 @@
                 <img class="img-fluid" width="200px" src="@imageService.DecodeImage(item.ImageData, item.ContentType)" />
             </th>
             <td>
-            <td>
                 <a asp-action="Edit" asp-route-id="@item.Id">Edit</a> |
                 <a asp-action="Details" asp-route-slug="@item.Slug">Details</a> |
                 <a asp-action="Delete" asp-route-id="@item.Id">Delete</a>
@@ -60,3 +68,4 @@
 }
     </tbody>
 </table>
+</div>

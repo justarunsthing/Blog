@@ -8,70 +8,69 @@
 @inject IImageService imageService
 @inject UserManager<BlogUser> userManager
 
-<div class="container">
-    <div class="row">
+@{
+    ViewData["Title"] = "Posts";
+    ViewData["MainText"] = "Posts";
+    ViewData["SubText"] = "Published pieces from this blog.";
+    ViewData["HeaderImage"] = "/img/tim-mossholder-IQJbbw72PZc-unsplash.jpg";
+}
+
+<div class="section-head">
+    <div>
+        <p class="eyebrow">Archive</p>
+        <h2>Published posts</h2>
+    </div>
+</div>
+
+@if (!Model.Any())
+{
+    <div class="empty-state">
+        <p>Nothing published in this blog yet.</p>
+    </div>
+}
+else
+{
+    <div class="story-grid">
         @foreach (var post in Model)
         {
-            var isAuthor = false;
-
-            if (User.Identity.IsAuthenticated)
+            var isAuthor = User.Identity.IsAuthenticated && post.AuthorId == userManager.GetUserId(User);
+            var image = imageService.DecodeImage(post.ImageData, post.ContentType);
+            if (string.IsNullOrEmpty(image))
             {
-                isAuthor = post.AuthorId == userManager.GetUserId(User);
+                image = "/img/post-sample-image.jpg";
             }
 
-            <div class="col-sm-2 col-lg-4">
-                <div class="card border-dark">
-                    <div class="card-body text-center">
-                        <div class="bg-warning">
-                            <hr class="card-hr" />
-                            <h5 class="card-title">
-                                @post.Title
-                            </h5>
-                            <hr class="card-hr" />
-                        </div>
-                        <div>
-                            <p class="card-text">
-                                @post.Abstract
-                            </p>
-                        </div>
-                        <br />
-                        <div class="text-center">
-                            <a class="btn btn-dark w-100 mb-2" asp-controller="Posts" asp-action="Details" asp-route-slug="@post.Slug">
-                                Read More
-                            </a>
-                        </div>
-
+            <article class="story-card">
+                <a class="story-card-media" asp-action="Details" asp-route-slug="@post.Slug">
+                    <img src="@image" alt="" />
+                </a>
+                <div class="story-card-body">
+                    <p class="story-meta">@post.Created.ToString("dd MMM yyyy")</p>
+                    <h3>@post.Title</h3>
+                    <p class="card-text">@post.Abstract</p>
+                    <div class="story-actions">
+                        <a class="btn btn-dark" asp-action="Details" asp-route-slug="@post.Slug">Read</a>
                         @if (User.IsInRole(BlogRole.Administrator.ToString()) || isAuthor)
                         {
-                            <div class="text-center">
-                                <a class="btn btn-success w-100 border-dark" asp-controller="Posts" asp-action="Edit" asp-route-id="@post.Id">
-                                    Edit
-                                </a>
-                            </div>
+                            <a class="btn btn-outline-ink" asp-action="Edit" asp-route-id="@post.Id">Edit</a>
                         }
                     </div>
-                    <img class="card-img-bottom" src="@imageService.DecodeImage(post.ImageData, post.ContentType)" />
                 </div>
-            </div>
+            </article>
         }
     </div>
-</div>
+}
 
-<hr />
-
-<!-- Pagination -->
-<div class="row">
-    <div class="col h3">
-        Page @(Model.PageCount < Model.PageNumber ? 0 : Model.PageNumber) of @Model.PageCount
-    </div>
-</div>
-<div class="row">
-    <div class="col">
-        @Html.PagedListPager(Model, page => Url.Action("BlogPostIndex", new { id = Model.FirstOrDefault().BlogId, page = page }),
-        new PagedListRenderOptions
-        {
-            LiElementClasses = new string[] { "page-item" },
-            PageClasses = new string[] { "page-link" }
-        })
-    </div>
-</div>
+@if (Model.Any())
+{
+    <nav class="pager-bar" aria-label="Post pages">
+        <p>Page @(Model.PageCount < Model.PageNumber ? 0 : Model.PageNumber) of @Model.PageCount</p>
+        @Html.PagedListPager(Model, page => Url.Action("BlogPostIndex", new { id = Model.First().BlogId, page = page }),
+            new PagedListRenderOptions
+            {
+                UlElementClasses = new string[] { "pagination", "mb-0" },
+                LiElementClasses = new string[] { "page-item" },
+                PageClasses = new string[] { "page-link" }
+            })
+    </nav>
+}

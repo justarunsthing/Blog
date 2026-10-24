@@ -10,77 +10,68 @@
 
 @{
     ViewData["Title"] = "justarunsthing's Tech Blog - Home";
+    ViewData["MainText"] = "justarunsthing";
+    ViewData["SubText"] = "Writing about software, side projects, and the details that usually stay in a notebook.";
+    ViewData["HeaderImage"] = "/img/nasa-Q1p7bh3SHj8-unsplash.jpg";
+    ViewData["ShowSearchBar"] = true;
 }
 
-<div class="container">
-    <div class="row">
+<div class="section-head">
+    <div>
+        <p class="eyebrow">The collection</p>
+        <h2>Latest blogs</h2>
+    </div>
+</div>
+
+@if (!Model.Any())
+{
+    <div class="empty-state">
+        <p>No published blogs yet. Once a post is marked Production, its blog shows up here.</p>
+    </div>
+}
+else
+{
+    <div class="story-grid">
         @foreach (var blog in Model)
         {
-            <div class="col-sm-12 col-md-6 col-lg-4 mt-2">
-                <div class="card border-dark">
-                    <img class="card-img-top" src="@imageService.DecodeImage(blog.ImageData, blog.ContentType)" />
-                    <div class="card-body text-center">
-                        <div class="bg-warning">
-                            <hr class="card-hr" />
-                            <h5 class="card-title">
-                                @blog.Name
-                            </h5>
-                            <hr class="card-hr" />
-                        </div>
-                        <div>
-                            <p class="card-text cftooltip" data-toggle="tooltip" data-placement="top" title="" data-original-title="@blog.Description">
-                                @blog.Description
-                            </p>
-                        </div>
-                        <br />
-                        <div class="text-center">
-                            <a class="btn btn-dark w-100 mb-2" asp-controller="Posts" asp-action="BlogPostIndex" asp-route-id="@blog.Id">
-                                Read Posts
-                            </a>
-                        </div>
+            var image = imageService.DecodeImage(blog.ImageData, blog.ContentType);
+            if (string.IsNullOrEmpty(image))
+            {
+                image = "/img/home-bg.jpg";
+            }
 
+            <article class="story-card">
+                <a class="story-card-media" asp-controller="Posts" asp-action="BlogPostIndex" asp-route-id="@blog.Id">
+                    <img src="@image" alt="" />
+                </a>
+                <div class="story-card-body">
+                    <p class="story-meta">@blog.Created.ToString("dd MMM yyyy")@(blog.Author != null ? $" · {blog.Author.FullName}" : "")</p>
+                    <h3>@blog.Name</h3>
+                    <p class="card-text" title="@blog.Description">@blog.Description</p>
+                    <div class="story-actions">
+                        <a class="btn btn-dark" asp-controller="Posts" asp-action="BlogPostIndex" asp-route-id="@blog.Id">Read posts</a>
                         @if (User.IsInRole(BlogRole.Administrator.ToString()))
                         {
-                            <div class="text-center">
-                                <a class="btn btn-dark w-100 mb-2" asp-controller="Posts" asp-action="Create" asp-route-id="@blog.Id">
-                                    Create Post
-                                </a>
-                            </div>
-                        }
-
-                        @if (User.IsInRole(BlogRole.Administrator.ToString()))
-                        {
-                            <div class="text-center">
-                                <a class="btn btn-dark w-100 mb-2" asp-controller="Blogs" asp-action="Edit" asp-route-id="@blog.Id">
-                                    Edit Blog
-                                </a>
-                            </div>
+                            <a class="btn btn-outline-ink" asp-controller="Posts" asp-action="Create" asp-route-id="@blog.Id">New post</a>
+                            <a class="btn btn-outline-ink" asp-controller="Blogs" asp-action="Edit" asp-route-id="@blog.Id">Edit</a>
                         }
                     </div>
                 </div>
-            </div>
+            </article>
         }
     </div>
+}
 
-    <hr />
-
-    <!-- Pagination -->
-    <div class="row">
-        <div class="col h3">
-            Page @(Model.PageCount < Model.PageNumber ? 0 : Model.PageNumber) of @Model.PageCount
-        </div>
-    </div>
-    <div class="row">
-        <div class="col">
-            @Html.PagedListPager(Model, page => Url.Action("Index", new { page = page }),
-                     new PagedListRenderOptions
-            {
-                LiElementClasses = new string[] { "page-item" },
-                PageClasses = new string[] { "page-link" }
-            })
-        </div>
-    </div>
-</div>
+<nav class="pager-bar" aria-label="Blog pages">
+    <p>Page @(Model.PageCount < Model.PageNumber ? 0 : Model.PageNumber) of @Model.PageCount</p>
+    @Html.PagedListPager(Model, page => Url.Action("Index", new { page = page }),
+        new PagedListRenderOptions
+        {
+            UlElementClasses = new string[] { "pagination", "mb-0" },
+            LiElementClasses = new string[] { "page-item" },
+            PageClasses = new string[] { "page-link" }
+        })
+</nav>
 
 @section Scripts {
     <script>
@@ -93,9 +84,5 @@
                 timer: 3000
             })
         }
-
-        $(document).ready(function() {
-            $("p").tooltip();
-        });
     </script>
 }
