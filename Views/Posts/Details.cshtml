@@ -103,7 +103,7 @@
                             <span>@comment.Created.ToString("dd MMM yyyy")</span>
                         }
                     </p>
-                    @if (string.IsNullOrEmpty(comment.Body))
+                    @if (comment.Deleted != null || string.IsNullOrEmpty(comment.Body))
                     {
                         <p>Comment not available</p>
                     }
@@ -111,7 +111,7 @@
                     {
                         <p>@comment.ModeratedBody</p>
                     }
-                    else if (comment.Deleted == null)
+                    else
                     {
                         <p>@comment.Body</p>
                     }

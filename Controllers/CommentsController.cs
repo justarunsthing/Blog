@@ -212,7 +212,12 @@ namespace Blog.Controllers
         {
             var comment = await _context.Comments.FindAsync(id);
 
-            _context.Comments.Remove(comment);
+            if (comment == null)
+            {
+                return NotFound();
+            }
+
+            comment.Deleted = DateTime.UtcNow;
 
             await _context.SaveChangesAsync();
 
