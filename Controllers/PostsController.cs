@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
@@ -121,6 +122,7 @@ namespace Blog.Controllers
         }
 
         // GET: Posts/Create
+        [Authorize(Roles = "Administrator")]
         public IActionResult Create()
         {
             ViewData["AuthorId"] = new SelectList(_context.Users, "Id", "Id");
@@ -133,6 +135,7 @@ namespace Blog.Controllers
         // To protect from overposting attacks, enable the specific properties you want to bind to.
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
+        [Authorize(Roles = "Administrator")]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create([Bind("BlogId,Title,Abstract,Content,Status,Image")] Post post, List<string> tagValues)
         {
@@ -193,6 +196,7 @@ namespace Blog.Controllers
         }
 
         // GET: Posts/Edit/5
+        [Authorize]
         public async Task<IActionResult> Edit(int? id)
         {
             if (id == null)
@@ -207,6 +211,11 @@ namespace Blog.Controllers
                 return NotFound();
             }
 
+            if (!CanManage(post))
+            {
+                return Forbid();
+            }
+
             ViewData["BlogId"] = new SelectList(_context.Blogs, "Id", "Name", post.BlogId);
             ViewData["TagValues"] = string.Join(",", post.Tags.Select(t => t.Text));
 
@@ -217,6 +226,7 @@ namespace Blog.Controllers
         // To protect from overposting attacks, enable the specific properties you want to bind to.
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
+        [Authorize]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit(int id, [Bind("Id,BlogId,Title,Abstract,Content,Status")] Post post, IFormFile newImage, List<string> tagValues)
         {
@@ -225,11 +235,22 @@ namespace Blog.Controllers
                 return NotFound();
             }
 
+            var currentPost = await _context.Posts.Include(p => p.Tags).FirstOrDefaultAsync(p => p.Id == post.Id);
+
+            if (currentPost == null)
+            {
+                return NotFound();
+            }
+
+            if (!CanManage(currentPost))
+            {
+                return Forbid();
+            }
+
             if (ModelState.IsValid)
             {
                 try
                 {
-                    var currentPost = await _context.Posts.Include(p => p.Tags).FirstOrDefaultAsync(p => p.Id == post.Id);
                     currentPost.Title = post.Title;
                     currentPost.Abstract = post.Abstract;
                     currentPost.Content = post.Content;
@@ -299,6 +320,7 @@ namespace Blog.Controllers
         }
 
         // GET: Posts/Delete/5
+        [Authorize]
         public async Task<IActionResult> Delete(int? id)
         {
             if (id == null)
@@ -316,24 +338,43 @@ namespace Blog.Controllers
                 return NotFound();
             }
 
+            if (!CanManage(post))
+            {
+                return Forbid();
+            }
+
             return View(post);
         }
 
         // POST: Posts/Delete/5
         [HttpPost, ActionName("Delete")]
+        [Authorize]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
             var post = await _context.Posts.FindAsync(id);
 
-            if (post != null)
+            if (post == null)
             {
-                _context.Posts.Remove(post);
+                return NotFound();
             }
+
+            if (!CanManage(post))
+            {
+                return Forbid();
+            }
+
+            _context.Posts.Remove(post);
 
             await _context.SaveChangesAsync();
 
             return RedirectToAction(nameof(Index));
+        }
+
+        private bool CanManage(Post post)
+        {
+            return post.AuthorId == _userManager.GetUserId(User)
+                || User.IsInRole(BlogRole.Administrator.ToString());
         }
 
         private bool CanRead(Post post)

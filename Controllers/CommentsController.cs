@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using Blog.Data;
 using Blog.Models;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 
 namespace Blog.Controllers
@@ -23,6 +24,7 @@ namespace Blog.Controllers
         }
 
         // GET: Comments
+        [Authorize(Roles = "Moderator")]
         public async Task<IActionResult> Index()
         {
             var applicationDbContext = _context.Comments.Include(c => c.Author).Include(c => c.Moderator).Include(c => c.Post);
@@ -34,6 +36,7 @@ namespace Blog.Controllers
         // To protect from overposting attacks, enable the specific properties you want to bind to.
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
+        [Authorize]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create([Bind("PostId,Body")] Comment comment)
         {
@@ -53,6 +56,7 @@ namespace Blog.Controllers
         }
 
         // GET: Comments/Edit/5
+        [Authorize]
         public async Task<IActionResult> Edit(int? id)
         {
             if (id == null)
@@ -67,6 +71,11 @@ namespace Blog.Controllers
                 return NotFound();
             }
 
+            if (!CanEdit(comment))
+            {
+                return Forbid();
+            }
+
             ViewData["AuthorId"] = new SelectList(_context.Users, "Id", "Id", comment.AuthorId);
             ViewData["ModeratorId"] = new SelectList(_context.Users, "Id", "Id", comment.ModeratorId);
             ViewData["PostId"] = new SelectList(_context.Posts, "Id", "Abstract", comment.PostId);
@@ -78,6 +87,7 @@ namespace Blog.Controllers
         // To protect from overposting attacks, enable the specific properties you want to bind to.
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
+        [Authorize]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit(int id, [Bind("Id,Body")] Comment comment)
         {
@@ -86,10 +96,20 @@ namespace Blog.Controllers
                 return NotFound();
             }
 
+            var currentComment = await _context.Comments.Include(c => c.Post).FirstOrDefaultAsync(c => c.Id == comment.Id);
+
+            if (currentComment == null)
+            {
+                return NotFound();
+            }
+
+            if (!CanEdit(currentComment))
+            {
+                return Forbid();
+            }
+
             if (ModelState.IsValid)
             {
-                var currentComment = await _context.Comments.Include(c => c.Post).FirstOrDefaultAsync(c => c.Id == comment.Id);
-
                 try
                 {
                     currentComment.Body = comment.Body;
@@ -119,13 +139,16 @@ namespace Blog.Controllers
         }
 
         [HttpPost]
+        [Authorize(Roles = "Moderator")]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Moderate(int id, [Bind("Id,Body,ModeratedBody,ModerationType")] Comment comment)
+        public async Task<IActionResult> Moderate(int id, [Bind("Id,ModeratedBody,ModerationType")] Comment comment)
         {
             if (id != comment.Id)
             {
                 return NotFound();
             }
+
+            ModelState.Remove(nameof(Comment.Body));
 
             if (ModelState.IsValid)
             {
@@ -159,6 +182,7 @@ namespace Blog.Controllers
         }
 
         // GET: Comments/Delete/5
+        [Authorize(Roles = "Moderator")]
         public async Task<IActionResult> Delete(int? id)
         {
             if (id == null)
@@ -182,6 +206,7 @@ namespace Blog.Controllers
 
         // POST: Comments/Delete/5
         [HttpPost, ActionName("Delete")]
+        [Authorize(Roles = "Moderator")]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(int id, string slug)
         {
@@ -192,6 +217,13 @@ namespace Blog.Controllers
             await _context.SaveChangesAsync();
 
             return RedirectToAction("Details", "Posts", new { slug }, "comment-section");
+        }
+
+        private bool CanEdit(Comment comment)
+        {
+            return comment.Moderated == null
+                && comment.Deleted == null
+                && comment.AuthorId == _userManager.GetUserId(User);
         }
 
         private bool CommentExists(int id)

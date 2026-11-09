@@ -1,7 +1,9 @@
 ﻿@model IEnumerable<Post>
 @using Blog.Enums
 @using Blog.Interfaces
+@using Microsoft.AspNetCore.Identity
 @inject IImageService imageService
+@inject UserManager<BlogUser> userManager
 
 @{
     ViewData["Title"] = "Posts";
@@ -21,9 +23,12 @@
     </div>
 </div>
 
-<p>
-    <a class="btn btn-dark mb-3" asp-action="Create">New post</a>
-</p>
+@if (User.IsInRole(BlogRole.Administrator.ToString()))
+{
+    <p>
+        <a class="btn btn-dark mb-3" asp-action="Create">New post</a>
+    </p>
+}
 <div class="table-wrap">
 <table class="table align-middle">
     <thead>
@@ -65,9 +70,17 @@
                 <img class="img-fluid" width="200px" src="@imageService.DecodeImage(item.ImageData, item.ContentType)" />
             </th>
             <td>
-                <a asp-action="Edit" asp-route-id="@item.Id">Edit</a> |
-                <a asp-action="Details" asp-route-slug="@item.Slug">Details</a> |
-                <a asp-action="Delete" asp-route-id="@item.Id">Delete</a>
+                @if (User.IsInRole(BlogRole.Administrator.ToString()) || item.AuthorId == userManager.GetUserId(User))
+                {
+                    <a asp-action="Edit" asp-route-id="@item.Id">Edit</a>
+                    <span> | </span>
+                }
+                <a asp-action="Details" asp-route-slug="@item.Slug">Details</a>
+                @if (User.IsInRole(BlogRole.Administrator.ToString()) || item.AuthorId == userManager.GetUserId(User))
+                {
+                    <span> | </span>
+                    <a asp-action="Delete" asp-route-id="@item.Id">Delete</a>
+                }
             </td>
         </tr>
 }

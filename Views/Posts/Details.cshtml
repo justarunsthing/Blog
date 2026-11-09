@@ -80,6 +80,8 @@
         @foreach (var comment in Model.Post.Comments.OrderByDescending(c => c.Created))
         {
             var avatar = imageService.DecodeImage(comment.Author?.ImageData, comment.Author?.ContentType);
+            var canEdit = comment.Moderated == null && comment.Deleted == null && comment.AuthorId == userManager.GetUserId(User);
+            var canModerate = User.IsInRole(BlogRole.Moderator.ToString()) && comment.Deleted == null;
             <article class="comment-card">
                 @if (!string.IsNullOrEmpty(avatar))
                 {
@@ -115,11 +117,11 @@
                     }
 
                     <div class="comment-actions">
-                        @if (comment.Moderated == null && comment.Deleted == null && comment.AuthorId == userManager.GetUserId(User))
+                        @if (canEdit)
                         {
                             <button type="button" data-bs-toggle="modal" data-bs-target="@($"#edit-comment-modal-{counter}")" class="btn btn-sm btn-outline-ink">Edit</button>
                         }
-                        @if (User.IsInRole(BlogRole.Moderator.ToString()) && comment.Deleted == null)
+                        @if (canModerate)
                         {
                             <button type="button" class="btn btn-sm btn-dark" data-bs-toggle="modal" data-bs-target="@($"#moderate-comment-modal-{counter}")">Moderate</button>
                             <form asp-controller="Comments" asp-action="Delete">
@@ -132,55 +134,63 @@
                 </div>
             </article>
 
-            <div id="@($"edit-comment-modal-{counter}")" class="modal fade" tabindex="-1">
-                <div class="modal-dialog">
-                    <div class="modal-content">
-                        <div class="modal-header">
-                            <h4 class="modal-title">Edit comment</h4>
-                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                        </div>
-                        <div class="modal-body">
-                            <form asp-controller="Comments" asp-action="Edit" method="post">
-                                @Html.Hidden("Id", comment.Id)
-                                <div class="form-group">
-                                    <textarea name="Body" class="form-control" rows="5" required>@comment.Body</textarea>
-                                </div>
-                                <button class="btn btn-dark" type="submit">Save</button>
-                            </form>
+            @if (canEdit)
+            {
+                <div id="@($"edit-comment-modal-{counter}")" class="modal fade" tabindex="-1">
+                    <div class="modal-dialog">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h4 class="modal-title">Edit comment</h4>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                            </div>
+                            <div class="modal-body">
+                                <form asp-controller="Comments" asp-action="Edit" method="post">
+                                    @Html.Hidden("Id", comment.Id)
+                                    <div class="form-group">
+                                        <textarea name="Body" class="form-control" rows="5" required>@comment.Body</textarea>
+                                    </div>
+                                    <button class="btn btn-dark" type="submit">Save</button>
+                                </form>
+                            </div>
                         </div>
                     </div>
                 </div>
-            </div>
+            }
 
-            <div class="modal fade" id="@($"moderate-comment-modal-{counter}")" tabindex="-1">
-                <div class="modal-dialog">
-                    <div class="modal-content">
-                        <div class="modal-header">
-                            <h4 class="modal-title">Moderate comment</h4>
-                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                        </div>
-                        <div class="modal-body">
-                            <form asp-controller="Comments" asp-action="Moderate" method="post">
-                                @Html.Hidden("Id", comment.Id)
-                                @Html.Hidden("Body", comment.Body)
-                                <div class="form-group">
-                                    <label class="control-label">Original comment</label>
-                                    <textarea disabled class="form-control" rows="4">@comment.Body</textarea>
-                                </div>
-                                <div class="form-group">
-                                    <label class="control-label">Moderated comment</label>
-                                    <textarea required name="ModeratedBody" class="form-control" rows="4">@comment.ModeratedBody</textarea>
-                                </div>
-                                <div class="form-group">
-                                    <label class="control-label">Reason</label>
-                                    <select class="form-control" asp-for="@comment.ModerationType" name="ModerationType" asp-items="Html.GetEnumSelectList<ModerationType>()"></select>
-                                </div>
-                                <button class="btn btn-dark" type="submit">Save moderation</button>
-                            </form>
+            @if (canModerate)
+            {
+                <div class="modal fade" id="@($"moderate-comment-modal-{counter}")" tabindex="-1">
+                    <div class="modal-dialog">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h4 class="modal-title">Moderate comment</h4>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                            </div>
+                            <div class="modal-body">
+                                <form asp-controller="Comments" asp-action="Moderate" method="post">
+                                    @Html.Hidden("Id", comment.Id)
+                                    @if (comment.Moderated == null)
+                                    {
+                                        <div class="form-group">
+                                            <label class="control-label">Original comment</label>
+                                            <textarea disabled class="form-control" rows="4">@comment.Body</textarea>
+                                        </div>
+                                    }
+                                    <div class="form-group">
+                                        <label class="control-label">Moderated comment</label>
+                                        <textarea required name="ModeratedBody" class="form-control" rows="4">@comment.ModeratedBody</textarea>
+                                    </div>
+                                    <div class="form-group">
+                                        <label class="control-label">Reason</label>
+                                        <select class="form-control" asp-for="@comment.ModerationType" name="ModerationType" asp-items="Html.GetEnumSelectList<ModerationType>()"></select>
+                                    </div>
+                                    <button class="btn btn-dark" type="submit">Save moderation</button>
+                                </form>
+                            </div>
                         </div>
                     </div>
                 </div>
-            </div>
+            }
 
             counter++;
         }
