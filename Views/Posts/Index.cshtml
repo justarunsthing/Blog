@@ -1,11 +1,16 @@
 ﻿@model IEnumerable<Post>
+@using Blog.Enums
 @using Blog.Interfaces
 @inject IImageService imageService
 
 @{
     ViewData["Title"] = "Posts";
     ViewData["MainText"] = "All posts";
-    ViewData["SubText"] = "Drafts and published pieces, in one list.";
+    ViewData["SubText"] = User.IsInRole(BlogRole.Administrator.ToString())
+        ? "Drafts and published pieces, in one list."
+        : User.Identity.IsAuthenticated
+            ? "Published posts, plus your drafts."
+            : "Published posts.";
     ViewData["HeaderImage"] = "/img/post-sample-image.jpg";
 }
 

@@ -36,9 +36,21 @@ namespace Blog.Controllers
         // GET: Posts
         public async Task<IActionResult> Index()
         {
-            var applicationDbContext = _context.Posts.Include(p => p.Author).Include(p => p.Blog);
+            var userId = _userManager.GetUserId(User);
+            var isAdministrator = User.IsInRole(BlogRole.Administrator.ToString());
 
-            return View(await applicationDbContext.ToListAsync());
+            IQueryable<Post> posts = _context.Posts
+                .Include(p => p.Author)
+                .Include(p => p.Blog);
+
+            if (!isAdministrator)
+            {
+                posts = posts.Where(p =>
+                    p.Status == ReadyStatus.Production ||
+                    (userId != null && p.AuthorId == userId));
+            }
+
+            return View(await posts.OrderByDescending(p => p.Created).ToListAsync());
         }
 
         public async Task<IActionResult> BlogPostIndex(int? id, int? page)
@@ -88,7 +100,7 @@ namespace Blog.Controllers
                 .ThenInclude(c => c.Moderator)
                 .FirstOrDefaultAsync(m => m.Slug == slug);
 
-            if (post == null)
+            if (post == null || !CanRead(post))
             {
                 return NotFound();
             }
@@ -322,6 +334,17 @@ namespace Blog.Controllers
             await _context.SaveChangesAsync();
 
             return RedirectToAction(nameof(Index));
+        }
+
+        private bool CanRead(Post post)
+        {
+            if (post.Status == ReadyStatus.Production || post.Status == ReadyStatus.Preview)
+            {
+                return true;
+            }
+
+            return post.AuthorId == _userManager.GetUserId(User)
+                || User.IsInRole(BlogRole.Administrator.ToString());
         }
 
         private bool PostExists(int id)

@@ -8,6 +8,14 @@
 
 <div class="post-layout">
     <article>
+        @if (Model.Post.Status == ReadyStatus.Preview)
+        {
+            <p class="post-status">Preview. This post is not listed. Anyone with this link can read it.</p>
+        }
+        else if (Model.Post.Status == ReadyStatus.Incomplete)
+        {
+            <p class="post-status">Draft. Only you and an administrator can open this.</p>
+        }
         @{
             var cover = imageService.DecodeImage(Model.Post.ImageData, Model.Post.ContentType);
         }

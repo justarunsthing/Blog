@@ -418,6 +418,16 @@ header.masthead .post-heading .subheading {
     grid-template-columns: minmax(0, 46rem);
 }
 
+.post-status {
+    margin: 0 0 1.25rem;
+    padding: 0.9rem 1.1rem;
+    background: var(--copper-soft);
+    border: 1px solid #f0c9b4;
+    border-radius: 0.9rem;
+    color: var(--ink);
+    font-size: 0.95rem;
+}
+
 .post-cover {
     display: block;
     width: 100%;
