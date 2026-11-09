@@ -6,7 +6,7 @@ An ASP.NET Core MVC blog. A blog is a subject. Posts live inside a blog. A post 
 
 - Read blogs and posts. The home page lists blogs that have at least one Production post, five per page.
 - Open a post by its slug at `/BlogPosts/UrlFriendly/{slug}`. Production and Preview open for anyone with the link. Incomplete returns Not Found unless the signed-in user is the author or an administrator.
-- Search Production posts by title, abstract, body, or comment text.
+- Search Production posts by title, abstract, or body.
 - Create a blog, with a name, description, and image. The create page requires the Administrator role.
 - Write a post with an abstract, body, tags, an image, and a status of Incomplete, Preview, or Production.
 - Comment on a post.
