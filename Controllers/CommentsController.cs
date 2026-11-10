@@ -45,11 +45,18 @@ namespace Blog.Controllers
                 comment.AuthorId = _userManager.GetUserId(User);
                 comment.Created = DateTime.UtcNow;
 
+                var post = await _context.Posts.FindAsync(comment.PostId);
+
+                if (post == null)
+                {
+                    return NotFound();
+                }
+
                 _context.Add(comment);
 
                 await _context.SaveChangesAsync();
 
-                return RedirectToAction(nameof(Index));
+                return RedirectToAction("Details", "Posts", new { slug = post.Slug }, "comment-section");
             }
 
             return View(comment);
