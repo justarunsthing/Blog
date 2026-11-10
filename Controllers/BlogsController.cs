@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using Blog.Data;
+using Blog.Enums;
 using Blog.Models;
 using Blog.Interfaces;
 using Microsoft.AspNetCore.Identity;
@@ -29,9 +30,12 @@ namespace Blog.Controllers
         // GET: Blogs
         public async Task<IActionResult> Index()
         {
-            var applicationDbContext = _context.Blogs.Include(b => b.Author);
+            var blogs = _context.Blogs
+                .Where(b => b.Posts.Any(p => p.Status == ReadyStatus.Production))
+                .OrderByDescending(b => b.Created)
+                .Include(b => b.Author);
 
-            return View(await applicationDbContext.ToListAsync());
+            return View(await blogs.ToListAsync());
         }
 
         // GET: Blogs/Details/5

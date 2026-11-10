@@ -40,26 +40,32 @@ namespace Blog.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create([Bind("PostId,Body")] Comment comment)
         {
-            if (ModelState.IsValid)
+            var post = await _context.Posts.FindAsync(comment.PostId);
+
+            if (post == null)
             {
-                comment.AuthorId = _userManager.GetUserId(User);
-                comment.Created = DateTime.UtcNow;
+                return NotFound();
+            }
 
-                var post = await _context.Posts.FindAsync(comment.PostId);
-
-                if (post == null)
-                {
-                    return NotFound();
-                }
-
-                _context.Add(comment);
-
-                await _context.SaveChangesAsync();
+            if (!ModelState.IsValid)
+            {
+                TempData["CommentError"] = string.Join(" ", ModelState.Values
+                    .SelectMany(entry => entry.Errors)
+                    .Select(error => error.ErrorMessage)
+                    .Where(message => !string.IsNullOrWhiteSpace(message)));
+                TempData["CommentBody"] = comment.Body;
 
                 return RedirectToAction("Details", "Posts", new { slug = post.Slug }, "comment-section");
             }
 
-            return View(comment);
+            comment.AuthorId = _userManager.GetUserId(User);
+            comment.Created = DateTime.UtcNow;
+
+            _context.Add(comment);
+
+            await _context.SaveChangesAsync();
+
+            return RedirectToAction("Details", "Posts", new { slug = post.Slug }, "comment-section");
         }
 
         // GET: Comments/Edit/5

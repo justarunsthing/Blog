@@ -82,6 +82,25 @@ namespace Blog.Controllers
             return View(await posts.ToPagedListAsync(pageNumber, pageSize));
         }
 
+        public async Task<IActionResult> TagIndex(string tag, int? page)
+        {
+            if (string.IsNullOrWhiteSpace(tag))
+            {
+                return NotFound();
+            }
+
+            var pageNumber = page ?? 1;
+            var pageSize = 5;
+            var normalized = tag.ToLower();
+            var posts = _context.Posts
+                .Where(p => p.Status == ReadyStatus.Production && p.Tags.Any(t => t.Text.ToLower() == normalized))
+                .OrderByDescending(p => p.Created);
+
+            ViewData["Tag"] = tag;
+
+            return View(await posts.ToPagedListAsync(pageNumber, pageSize));
+        }
+
         // GET: Posts/Details/{slug}
         public async Task<IActionResult> Details(string slug)
         {

@@ -5,7 +5,7 @@
 @{
     ViewData["Title"] = "Blogs";
     ViewData["MainText"] = "Blogs";
-    ViewData["SubText"] = "Every blog, including ones still waiting on a published post.";
+    ViewData["SubText"] = "Blogs with at least one published post.";
     ViewData["HeaderImage"] = "/img/home-bg.jpg";
 }
 
@@ -23,6 +23,14 @@
     </p>
 }
 
+@if (!Model.Any())
+{
+    <div class="empty-state">
+        <p>No published blogs yet. Once a post is marked Production, its blog shows up here.</p>
+    </div>
+}
+else
+{
 <div class="table-wrap">
 <table class="table align-middle">
     <thead>
@@ -82,3 +90,4 @@
     </tbody>
 </table>
 </div>
+}
