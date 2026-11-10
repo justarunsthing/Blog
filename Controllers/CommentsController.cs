@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using Blog.Data;
+using Blog.Enums;
 using Blog.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
@@ -42,7 +43,7 @@ namespace Blog.Controllers
         {
             var post = await _context.Posts.FindAsync(comment.PostId);
 
-            if (post == null)
+            if (post == null || !CanRead(post))
             {
                 return NotFound();
             }
@@ -167,6 +168,11 @@ namespace Blog.Controllers
             {
                 var currentComment = await _context.Comments.Include(c => c.Post).FirstOrDefaultAsync(c => c.Id == comment.Id);
 
+                if (currentComment == null)
+                {
+                    return NotFound();
+                }
+
                 try
                 {
                     currentComment.ModeratedBody = comment.ModeratedBody;
@@ -235,6 +241,17 @@ namespace Blog.Controllers
             await _context.SaveChangesAsync();
 
             return RedirectToAction("Details", "Posts", new { slug }, "comment-section");
+        }
+
+        private bool CanRead(Post post)
+        {
+            if (post.Status == ReadyStatus.Production || post.Status == ReadyStatus.Preview)
+            {
+                return true;
+            }
+
+            return post.AuthorId == _userManager.GetUserId(User)
+                || User.IsInRole(BlogRole.Administrator.ToString());
         }
 
         private bool CanEdit(Comment comment)

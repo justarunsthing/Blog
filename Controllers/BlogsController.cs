@@ -48,7 +48,7 @@ namespace Blog.Controllers
 
             var blog = await _context.Blogs
                 .Include(b => b.Author)
-                .FirstOrDefaultAsync(m => m.Id == id);
+                .FirstOrDefaultAsync(m => m.Id == id && m.Posts.Any(p => p.Status == ReadyStatus.Production));
 
             if (blog == null)
             {
