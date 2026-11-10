@@ -5,6 +5,7 @@ using X.PagedList.EF;
 using Blog.ViewModels;
 using Blog.Interfaces;
 using System.Diagnostics;
+using System.Net;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
@@ -50,9 +51,17 @@ namespace Blog.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Contact(ContactMe model)
         {
-            model.Message = $"{model.Message} <hr/> Phone: {model.Phone}";
+            if (!ModelState.IsValid)
+            {
+                return View(model);
+            }
 
-            await _emailSender.SendContactEmailAsync(model.Email, model.Subject, model.Name, model.Message);
+            var name = WebUtility.HtmlEncode(model.Name);
+            var email = WebUtility.HtmlEncode(model.Email);
+            var phone = WebUtility.HtmlEncode(model.Phone);
+            var message = $"{WebUtility.HtmlEncode(model.Message)} <hr/> Phone: {phone}";
+
+            await _emailSender.SendContactEmailAsync(email, model.Subject, name, message);
 
             return RedirectToAction("Index");
         }
