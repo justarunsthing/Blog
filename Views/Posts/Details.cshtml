@@ -52,7 +52,10 @@
 
 <section class="comments" id="comment-section">
     <p class="eyebrow">Discussion</p>
-    <h2>@Model.Post.Comments.Count comment@(Model.Post.Comments.Count == 1 ? "" : "s")</h2>
+    @{
+        var commentCount = Model.Post.Comments.Count(comment => comment.Deleted == null);
+    }
+    <h2>@commentCount comment@(commentCount == 1 ? "" : "s")</h2>
 
     @if (User.Identity.IsAuthenticated)
     {
