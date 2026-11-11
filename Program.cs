@@ -3,6 +3,7 @@ using Blog.Models;
 using Blog.Services;
 using Blog.ViewModels;
 using Blog.Interfaces;
+using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Http.Features;
 using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.Identity;
@@ -21,6 +22,10 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
 // builder.Services.AddDefaultIdentity<BlogUser>(options => options.SignIn.RequireConfirmedAccount = true).AddEntityFrameworkStores<ApplicationDbContext>();
 
 builder.Services.AddDatabaseDeveloperPageExceptionFilter();
+
+builder.Services.AddDataProtection()
+    .SetApplicationName("Blog")
+    .PersistKeysToDbContext<ApplicationDbContext>();
 
 builder.Services.AddIdentity<BlogUser, IdentityRole>(options => options.SignIn.RequireConfirmedAccount = true)
     .AddDefaultUI()

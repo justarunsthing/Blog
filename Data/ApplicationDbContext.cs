@@ -1,10 +1,11 @@
 ﻿using Blog.Models;
+using Microsoft.AspNetCore.DataProtection.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 
 namespace Blog.Data
 {
-    public class ApplicationDbContext : IdentityDbContext<BlogUser>
+    public class ApplicationDbContext : IdentityDbContext<BlogUser>, IDataProtectionKeyContext
     {
         public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options)
             : base(options)
@@ -15,6 +16,7 @@ namespace Blog.Data
         public DbSet<Post> Posts { get; set; }
         public DbSet<Comment> Comments { get; set; }
         public DbSet<Tag> Tags { get; set; }
+        public DbSet<DataProtectionKey> DataProtectionKeys { get; set; }
 
     }
 }
