@@ -73,12 +73,19 @@ namespace Blog.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create([Bind("Name,Description,Image")] Blog.Models.Blog blog)
         {
+            var upload = await _imageService.ReadUploadAsync(blog.Image);
+
+            if (!upload.IsAllowed)
+            {
+                ModelState.AddModelError(nameof(blog.Image), upload.Error);
+            }
+
             if (ModelState.IsValid)
             {
                 blog.Created = DateTime.UtcNow;
                 blog.AuthorId = _userManager.GetUserId(User);
-                blog.ImageData = await _imageService.EncodeImageAsync(blog.Image);
-                blog.ContentType = _imageService.ContentType(blog.Image);
+                blog.ImageData = upload.Data;
+                blog.ContentType = upload.ContentType;
 
                 _context.Add(blog);
                 await _context.SaveChangesAsync();
@@ -123,6 +130,13 @@ namespace Blog.Controllers
                 return NotFound();
             }
 
+            var upload = await _imageService.ReadUploadAsync(newImage);
+
+            if (!upload.IsAllowed)
+            {
+                ModelState.AddModelError(nameof(blog.Image), upload.Error);
+            }
+
             if (ModelState.IsValid)
             {
                 try
@@ -139,10 +153,10 @@ namespace Blog.Controllers
                         currentBlog.Description = blog.Description;
                     }
 
-                    if (newImage != null)
+                    if (upload.Data != null)
                     {
-                        currentBlog.ImageData = await _imageService.EncodeImageAsync(newImage);
-                        currentBlog.ContentType = _imageService.ContentType(newImage);
+                        currentBlog.ImageData = upload.Data;
+                        currentBlog.ContentType = upload.ContentType;
                     }
 
                     currentBlog.Updated = DateTime.UtcNow;

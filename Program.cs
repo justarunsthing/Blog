@@ -3,6 +3,7 @@ using Blog.Models;
 using Blog.Services;
 using Blog.ViewModels;
 using Blog.Interfaces;
+using Microsoft.AspNetCore.Http.Features;
 using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
@@ -25,6 +26,15 @@ builder.Services.AddIdentity<BlogUser, IdentityRole>(options => options.SignIn.R
     .AddDefaultUI()
     .AddDefaultTokenProviders()
     .AddEntityFrameworkStores<ApplicationDbContext>();
+builder.Services.Configure<FormOptions>(options =>
+{
+    options.MultipartBodyLengthLimit = ImageService.MaxRequestBytes;
+});
+builder.WebHost.ConfigureKestrel(options =>
+{
+    options.Limits.MaxRequestBodySize = ImageService.MaxRequestBytes;
+});
+
 builder.Services.AddControllersWithViews();
 builder.Services.AddRazorPages();
 

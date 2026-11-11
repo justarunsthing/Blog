@@ -5,6 +5,8 @@ namespace Blog.Tests;
 
 public class StubImageService : IImageService
 {
+    public Task<ImageUpload> ReadUploadAsync(IFormFile file) => Task.FromResult(ImageUpload.None());
+
     public string ContentType(IFormFile file) => "image/png";
 
     public string DecodeImage(byte[] data, string type) => "";

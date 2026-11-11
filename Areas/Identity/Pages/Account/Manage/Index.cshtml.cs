@@ -105,9 +105,17 @@ namespace Blog.Areas.Identity.Pages.Account.Manage
                 return NotFound($"Unable to load user with ID '{_userManager.GetUserId(User)}'.");
             }
 
+            var upload = await _imageService.ReadUploadAsync(Input?.ImageFile);
+
+            if (!upload.IsAllowed)
+            {
+                ModelState.AddModelError("Input.ImageFile", upload.Error);
+            }
+
             if (!ModelState.IsValid)
             {
-                await LoadAsync(user);
+                Username = await _userManager.GetUserNameAsync(user);
+                CurrentImage = _imageService.DecodeImage(user.ImageData, user.ContentType);
 
                 return Page();
             }
@@ -126,10 +134,10 @@ namespace Blog.Areas.Identity.Pages.Account.Manage
             }
 
             // Update user's new image 
-            if (Input.ImageFile != null)
+            if (upload.Data != null)
             {
-                user.ImageData = await _imageService.EncodeImageAsync(Input.ImageFile);
-                user.ContentType = _imageService.ContentType(Input.ImageFile);
+                user.ImageData = upload.Data;
+                user.ContentType = upload.ContentType;
 
                 await _userManager.UpdateAsync(user);
             }

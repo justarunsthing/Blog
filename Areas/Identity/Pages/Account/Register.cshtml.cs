@@ -135,14 +135,21 @@ namespace Blog.Areas.Identity.Pages.Account
         {
             returnUrl ??= Url.Content("~/");
             ExternalLogins = (await _signInManager.GetExternalAuthenticationSchemesAsync()).ToList();
+            var upload = await _imageService.ReadUploadAsync(Input?.ImageFile);
+
+            if (!upload.IsAllowed)
+            {
+                ModelState.AddModelError("Input.ImageFile", upload.Error);
+            }
+
             if (ModelState.IsValid)
             {
                 var user = CreateUser();
                 user.FirstName = Input.FirstName;
                 user.LastName = Input.LastName;
                 user.DisplayName = Input.DisplayName;
-                user.ImageData = (await _imageService.EncodeImageAsync(Input.ImageFile)) ?? await _imageService.EncodeImageAsync(_configuration["DefaultUserImage"]);
-                user.ContentType = Input.ImageFile == null ? Path.GetExtension(_configuration["DefaultUserImage"]) : _imageService.ContentType(Input.ImageFile);
+                user.ImageData = upload.Data ?? await _imageService.EncodeImageAsync(_configuration["DefaultUserImage"]);
+                user.ContentType = upload.Data == null ? Path.GetExtension(_configuration["DefaultUserImage"]) : upload.ContentType;
 
                 await _userStore.SetUserNameAsync(user, Input.Email, CancellationToken.None);
                 await _emailStore.SetEmailAsync(user, Input.Email, CancellationToken.None);

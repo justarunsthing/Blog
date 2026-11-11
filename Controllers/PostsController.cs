@@ -158,6 +158,13 @@ namespace Blog.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create([Bind("BlogId,Title,Abstract,Content,Status,Image")] Post post, List<string> tagValues)
         {
+            var upload = await _imageService.ReadUploadAsync(post.Image);
+
+            if (!upload.IsAllowed)
+            {
+                ModelState.AddModelError(nameof(post.Image), upload.Error);
+            }
+
             if (ModelState.IsValid)
             {
                 var slug = _slugService.UrlFriendly(post.Title);
@@ -186,8 +193,8 @@ namespace Blog.Controllers
 
                 post.AuthorId = authorId;
                 post.Slug = slug;
-                post.ImageData = await _imageService.EncodeImageAsync(post.Image);
-                post.ContentType = _imageService.ContentType(post.Image);
+                post.ImageData = upload.Data;
+                post.ContentType = upload.ContentType;
                 post.Created = DateTime.UtcNow;
 
                 _context.Add(post);
@@ -209,6 +216,7 @@ namespace Blog.Controllers
                 return RedirectToAction(nameof(Index));
             }
 
+            ViewData["TagValues"] = string.Join(",", tagValues);
             ViewData["BlogId"] = new SelectList(_context.Blogs, "Id", "Description", post.BlogId);
 
             return View(post);
@@ -266,6 +274,13 @@ namespace Blog.Controllers
                 return Forbid();
             }
 
+            var upload = await _imageService.ReadUploadAsync(newImage);
+
+            if (!upload.IsAllowed)
+            {
+                ModelState.AddModelError(nameof(post.Image), upload.Error);
+            }
+
             if (ModelState.IsValid)
             {
                 try
@@ -293,10 +308,10 @@ namespace Blog.Controllers
                         }
                     }
 
-                    if (newImage != null)
+                    if (upload.Data != null)
                     {
-                        currentPost.ImageData = await _imageService.EncodeImageAsync(newImage);
-                        currentPost.ContentType = _imageService.ContentType(newImage);
+                        currentPost.ImageData = upload.Data;
+                        currentPost.ContentType = upload.ContentType;
                     }
 
                     // Clear any existing tags
@@ -332,6 +347,7 @@ namespace Blog.Controllers
                 return RedirectToAction(nameof(Index));
             }
 
+            ViewData["TagValues"] = string.Join(",", tagValues);
             ViewData["AuthorId"] = new SelectList(_context.Users, "Id", "Id", post.AuthorId);
             ViewData["BlogId"] = new SelectList(_context.Blogs, "Id", "Description", post.BlogId);
 
