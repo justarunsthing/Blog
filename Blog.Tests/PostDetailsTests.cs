@@ -34,6 +34,21 @@ public class PostDetailsTests
     }
 
     [Fact]
+    public async Task Details_lists_tags_from_production_posts_only()
+    {
+        await using var database = new TestDatabase();
+        await database.AddPostAsync("public-note", ReadyStatus.Production, "author", "shipped");
+        await database.AddPostAsync("draft-note", ReadyStatus.Incomplete, "author", "secret");
+        await database.AddPostAsync("preview-note", ReadyStatus.Preview, "author", "soon");
+
+        var result = await database.CreateController().Details("public-note");
+
+        var view = Assert.IsType<ViewResult>(result);
+        var model = Assert.IsType<PostDetailViewModel>(view.Model);
+        Assert.Equal(new[] { "shipped" }, model.Tags);
+    }
+
+    [Fact]
     public async Task Details_opens_a_preview_post_for_anyone()
     {
         await using var database = new TestDatabase();
@@ -86,19 +101,22 @@ public class PostDetailsTests
             _context.Database.EnsureCreated();
         }
 
-        public async Task AddPostAsync(string slug, ReadyStatus status, string authorId)
+        public async Task AddPostAsync(string slug, ReadyStatus status, string authorId, string tag = null)
         {
-            _context.Users.Add(new BlogUser
+            if (!await _context.Users.AnyAsync(user => user.Id == authorId))
             {
-                Id = authorId,
-                UserName = authorId,
-                NormalizedUserName = authorId.ToUpperInvariant(),
-                Email = authorId + "@example.com",
-                NormalizedEmail = (authorId + "@example.com").ToUpperInvariant(),
-                FirstName = "Ann",
-                LastName = "Author",
-                SecurityStamp = Guid.NewGuid().ToString()
-            });
+                _context.Users.Add(new BlogUser
+                {
+                    Id = authorId,
+                    UserName = authorId,
+                    NormalizedUserName = authorId.ToUpperInvariant(),
+                    Email = authorId + "@example.com",
+                    NormalizedEmail = (authorId + "@example.com").ToUpperInvariant(),
+                    FirstName = "Ann",
+                    LastName = "Author",
+                    SecurityStamp = Guid.NewGuid().ToString()
+                });
+            }
 
             var blog = new Blog.Models.Blog
             {
@@ -112,7 +130,7 @@ public class PostDetailsTests
             _context.Blogs.Add(blog);
             await _context.SaveChangesAsync();
 
-            _context.Posts.Add(new Post
+            var post = new Post
             {
                 BlogId = blog.Id,
                 AuthorId = authorId,
@@ -124,8 +142,20 @@ public class PostDetailsTests
                 Slug = slug,
                 ImageData = new byte[] { 1 },
                 ContentType = "image/png"
-            });
+            };
+            _context.Posts.Add(post);
             await _context.SaveChangesAsync();
+
+            if (tag != null)
+            {
+                _context.Tags.Add(new Tag
+                {
+                    PostId = post.Id,
+                    AuthorId = authorId,
+                    Text = tag
+                });
+                await _context.SaveChangesAsync();
+            }
         }
 
         public PostsController CreateController(string userId = null, string role = null)

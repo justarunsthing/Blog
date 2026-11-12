@@ -128,9 +128,11 @@ namespace Blog.Controllers
             var viewModel = new PostDetailViewModel
             {
                 Post = post,
-                Tags = _context.Tags
+                Tags = await _context.Tags
+                        .Where(t => t.Post.Status == ReadyStatus.Production)
                         .Select(t => t.Text.ToLower())
-                        .Distinct().ToList()
+                        .Distinct()
+                        .ToListAsync()
             };
 
             ViewData["HeaderImage"] = _imageService.DecodeImage(post.ImageData, post.ContentType);
