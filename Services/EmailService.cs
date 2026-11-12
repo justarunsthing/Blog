@@ -19,6 +19,7 @@ namespace Blog.Services
                 Subject = subject
             };
 
+            email.From.Add(MailboxAddress.Parse(_mailSettings.Mail));
             email.To.Add(MailboxAddress.Parse(_mailSettings.Mail));
 
             var builder = new BodyBuilder
@@ -45,6 +46,7 @@ namespace Blog.Services
                 Subject = subject
             };
 
+            email.From.Add(MailboxAddress.Parse(_mailSettings.Mail));
             email.To.Add(MailboxAddress.Parse(emailTo));
 
             var builder = new BodyBuilder

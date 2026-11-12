@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Http.Features;
 using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Identity.UI.Services;
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -50,8 +51,9 @@ builder.Services.AddScoped<SearchService>();
 // Register a pre-configured instance of MailSettings class
 builder.Services.Configure<MailSettings>(builder.Configuration.GetSection("MailSettings"));
 
-// Register email service 
+// Register email service after AddDefaultUI so it replaces Identity's sender.
 builder.Services.AddScoped<IBlogEmailSender, EmailService>();
+builder.Services.AddScoped<IEmailSender>(sp => sp.GetRequiredService<IBlogEmailSender>());
 
 // Register image service
 builder.Services.AddScoped<IImageService, ImageService>();
