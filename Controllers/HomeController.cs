@@ -4,6 +4,7 @@ using Blog.Models;
 using X.PagedList.EF;
 using Blog.ViewModels;
 using Blog.Interfaces;
+using Blog.Services;
 using System.Diagnostics;
 using System.Net;
 using Microsoft.AspNetCore.Mvc;
@@ -16,12 +17,14 @@ namespace Blog.Controllers
         private readonly ILogger<HomeController> _logger;
         private readonly IBlogEmailSender _emailSender;
         private readonly ApplicationDbContext _context;
+        private readonly ContactRateLimit _contactRateLimit;
 
-        public HomeController(ILogger<HomeController> logger, IBlogEmailSender emailSender, ApplicationDbContext context)
+        public HomeController(ILogger<HomeController> logger, IBlogEmailSender emailSender, ApplicationDbContext context, ContactRateLimit contactRateLimit)
         {
             _logger = logger;
             _emailSender = emailSender;
             _context = context;
+            _contactRateLimit = contactRateLimit;
         }
 
         public async Task<IActionResult> IndexAsync(int? page)
@@ -53,6 +56,12 @@ namespace Blog.Controllers
         {
             if (!ModelState.IsValid)
             {
+                return View(model);
+            }
+
+            if (!_contactRateLimit.TryBeginSend(model.Email, DateTimeOffset.UtcNow))
+            {
+                ModelState.AddModelError(string.Empty, "Please wait 10 minutes before sending another message from this address.");
                 return View(model);
             }
 

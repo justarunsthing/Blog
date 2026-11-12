@@ -54,6 +54,7 @@ builder.Services.Configure<MailSettings>(builder.Configuration.GetSection("MailS
 // Register email service after AddDefaultUI so it replaces Identity's sender.
 builder.Services.AddScoped<IBlogEmailSender, EmailService>();
 builder.Services.AddScoped<IEmailSender>(sp => sp.GetRequiredService<IBlogEmailSender>());
+builder.Services.AddSingleton<ContactRateLimit>();
 
 // Register image service
 builder.Services.AddScoped<IImageService, ImageService>();
