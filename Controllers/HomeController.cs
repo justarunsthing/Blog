@@ -72,6 +72,8 @@ namespace Blog.Controllers
 
             await _emailSender.SendContactEmailAsync(email, model.Subject, name, message);
 
+            TempData["SweetAlert"] = "Message sent.";
+
             return RedirectToAction("Index");
         }
 

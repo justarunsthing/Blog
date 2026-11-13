@@ -2,7 +2,9 @@ using Blog.Controllers;
 using Blog.Interfaces;
 using Blog.Services;
 using Blog.ViewModels;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.ViewFeatures;
 using Microsoft.Extensions.Logging.Abstractions;
 
 namespace Blog.Tests;
@@ -29,6 +31,9 @@ public class ContactRateLimitTests
             sender,
             null,
             new ContactRateLimit());
+        var httpContext = new DefaultHttpContext();
+        controller.ControllerContext = new ControllerContext { HttpContext = httpContext };
+        controller.TempData = new TempDataDictionary(httpContext, new DictionaryTempDataProvider());
         var first = new ContactMe { Name = "Ada", Email = "Ada@Example.com", Subject = "Hello", Message = "A note" };
         var second = new ContactMe { Name = "Ada", Email = "ada@example.com", Subject = "Hello", Message = "Another note" };
 
@@ -37,6 +42,7 @@ public class ContactRateLimitTests
 
         Assert.Equal(1, sender.ContactSends);
         Assert.IsType<RedirectToActionResult>(firstResult);
+        Assert.Equal("Message sent.", controller.TempData["SweetAlert"]);
         Assert.IsType<ViewResult>(secondResult);
         Assert.False(controller.ModelState.IsValid);
     }
@@ -52,5 +58,14 @@ public class ContactRateLimitTests
         }
 
         public Task SendEmailAsync(string email, string subject, string htmlMessage) => Task.CompletedTask;
+    }
+
+    private sealed class DictionaryTempDataProvider : ITempDataProvider
+    {
+        public IDictionary<string, object> LoadTempData(HttpContext context) => new Dictionary<string, object>();
+
+        public void SaveTempData(HttpContext context, IDictionary<string, object> values)
+        {
+        }
     }
 }
