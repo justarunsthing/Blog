@@ -17,14 +17,14 @@ namespace Blog.Controllers
         private readonly ILogger<HomeController> _logger;
         private readonly IBlogEmailSender _emailSender;
         private readonly ApplicationDbContext _context;
-        private readonly ContactRateLimit _contactRateLimit;
+        private readonly MailCooldown _mailCooldown;
 
-        public HomeController(ILogger<HomeController> logger, IBlogEmailSender emailSender, ApplicationDbContext context, ContactRateLimit contactRateLimit)
+        public HomeController(ILogger<HomeController> logger, IBlogEmailSender emailSender, ApplicationDbContext context, MailCooldown mailCooldown)
         {
             _logger = logger;
             _emailSender = emailSender;
             _context = context;
-            _contactRateLimit = contactRateLimit;
+            _mailCooldown = mailCooldown;
         }
 
         public async Task<IActionResult> IndexAsync(int? page)
@@ -59,9 +59,11 @@ namespace Blog.Controllers
                 return View(model);
             }
 
-            if (!_contactRateLimit.TryBeginSend(model.Email, DateTimeOffset.UtcNow))
+            var remoteIp = HttpContext.Connection.RemoteIpAddress?.ToString();
+
+            if (!await _mailCooldown.TryBeginAsync(MailCooldown.Contact, model.Email, remoteIp, MailCooldown.ContactWindow))
             {
-                ModelState.AddModelError(string.Empty, "Please wait 10 minutes before sending another message from this address.");
+                ModelState.AddModelError(string.Empty, "Please wait 10 minutes before sending another message.");
                 return View(model);
             }
 

@@ -20,6 +20,7 @@ using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.AspNetCore.WebUtilities;
 using Microsoft.Extensions.Logging;
 using Blog.Interfaces;
+using Blog.Services;
 
 namespace Blog.Areas.Identity.Pages.Account
 {
@@ -33,6 +34,7 @@ namespace Blog.Areas.Identity.Pages.Account
         private readonly IBlogEmailSender _emailSender;
         private readonly IImageService _imageService;
         private readonly IConfiguration _configuration;
+        private readonly MailCooldown _mailCooldown;
 
         public RegisterModel(
             UserManager<BlogUser> userManager,
@@ -41,7 +43,8 @@ namespace Blog.Areas.Identity.Pages.Account
             ILogger<RegisterModel> logger,
             IBlogEmailSender emailSender,
             IImageService imageService,
-            IConfiguration configuration)
+            IConfiguration configuration,
+            MailCooldown mailCooldown)
         {
             _userManager = userManager;
             _userStore = userStore;
@@ -51,6 +54,7 @@ namespace Blog.Areas.Identity.Pages.Account
             _emailSender = emailSender;
             _imageService = imageService;
             _configuration = configuration;
+            _mailCooldown = mailCooldown;
         }
 
         /// <summary>
@@ -144,6 +148,14 @@ namespace Blog.Areas.Identity.Pages.Account
 
             if (ModelState.IsValid)
             {
+                var remoteIp = HttpContext.Connection.RemoteIpAddress?.ToString();
+
+                if (!await _mailCooldown.TryBeginAsync(MailCooldown.Registration, Input.Email, remoteIp, MailCooldown.AccountWindow))
+                {
+                    ModelState.AddModelError(string.Empty, "Please wait 2 minutes before registering again.");
+                    return Page();
+                }
+
                 var user = CreateUser();
                 user.FirstName = Input.FirstName;
                 user.LastName = Input.LastName;

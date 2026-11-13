@@ -17,6 +17,7 @@ namespace Blog.Data
         public DbSet<Comment> Comments { get; set; }
         public DbSet<Tag> Tags { get; set; }
         public DbSet<DataProtectionKey> DataProtectionKeys { get; set; }
+        public DbSet<MailSend> MailSends { get; set; }
 
     }
 }

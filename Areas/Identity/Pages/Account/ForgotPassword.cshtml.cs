@@ -15,6 +15,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.AspNetCore.WebUtilities;
 using Blog.Interfaces;
+using Blog.Services;
 
 namespace Blog.Areas.Identity.Pages.Account
 {
@@ -22,11 +23,13 @@ namespace Blog.Areas.Identity.Pages.Account
     {
         private readonly UserManager<BlogUser> _userManager;
         private readonly IBlogEmailSender _emailSender;
+        private readonly MailCooldown _mailCooldown;
 
-        public ForgotPasswordModel(UserManager<BlogUser> userManager, IBlogEmailSender emailSender)
+        public ForgotPasswordModel(UserManager<BlogUser> userManager, IBlogEmailSender emailSender, MailCooldown mailCooldown)
         {
             _userManager = userManager;
             _emailSender = emailSender;
+            _mailCooldown = mailCooldown;
         }
 
         /// <summary>
@@ -55,6 +58,14 @@ namespace Blog.Areas.Identity.Pages.Account
         {
             if (ModelState.IsValid)
             {
+                var remoteIp = HttpContext.Connection.RemoteIpAddress?.ToString();
+
+                if (!await _mailCooldown.TryBeginAsync(MailCooldown.PasswordReset, Input.Email, remoteIp, MailCooldown.AccountWindow))
+                {
+                    ModelState.AddModelError(string.Empty, "Please wait 2 minutes before requesting another reset.");
+                    return Page();
+                }
+
                 var user = await _userManager.FindByEmailAsync(Input.Email);
 
                 if (user == null || !(await _userManager.IsEmailConfirmedAsync(user)))
