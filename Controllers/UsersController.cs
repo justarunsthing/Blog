@@ -29,11 +29,13 @@ namespace Blog.Controllers
 
             foreach (var user in users)
             {
+                var roles = await _userManager.GetRolesAsync(user);
                 rows.Add(new UserRow
                 {
                     User = user,
-                    Roles = await _userManager.GetRolesAsync(user),
-                    Locked = user.LockoutEnd != null && user.LockoutEnd > DateTimeOffset.UtcNow
+                    Roles = roles,
+                    Locked = user.LockoutEnd != null && user.LockoutEnd > DateTimeOffset.UtcNow,
+                    IsAdministrator = roles.Contains("Administrator")
                 });
             }
 
@@ -55,6 +57,80 @@ namespace Blog.Controllers
             await _userManager.ResetAccessFailedCountAsync(user);
 
             TempData["UserMessage"] = $"Unlocked {user.Email}.";
+
+            return RedirectToAction(nameof(Index));
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Disable(string id)
+        {
+            var user = await _userManager.FindByIdAsync(id);
+
+            if (user == null)
+            {
+                return NotFound();
+            }
+
+            if (user.Id == _userManager.GetUserId(User))
+            {
+                TempData["UserMessage"] = "You cannot disable your own account.";
+                return RedirectToAction(nameof(Index));
+            }
+
+            if (await _userManager.IsInRoleAsync(user, "Administrator"))
+            {
+                TempData["UserMessage"] = "An administrator account stays active.";
+                return RedirectToAction(nameof(Index));
+            }
+
+            if (user.Disabled)
+            {
+                TempData["UserMessage"] = $"{user.Email} is already disabled.";
+                return RedirectToAction(nameof(Index));
+            }
+
+            user.Disabled = true;
+            var disabled = await _userManager.UpdateAsync(user);
+            if (!disabled.Succeeded)
+            {
+                TempData["UserMessage"] = $"Could not disable {user.Email}.";
+                return RedirectToAction(nameof(Index));
+            }
+
+            await _userManager.UpdateSecurityStampAsync(user);
+
+            TempData["UserMessage"] = $"Disabled {user.Email}.";
+
+            return RedirectToAction(nameof(Index));
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Enable(string id)
+        {
+            var user = await _userManager.FindByIdAsync(id);
+
+            if (user == null)
+            {
+                return NotFound();
+            }
+
+            if (!user.Disabled)
+            {
+                TempData["UserMessage"] = $"{user.Email} is already active.";
+                return RedirectToAction(nameof(Index));
+            }
+
+            user.Disabled = false;
+            var enabled = await _userManager.UpdateAsync(user);
+            if (!enabled.Succeeded)
+            {
+                TempData["UserMessage"] = $"Could not enable {user.Email}.";
+                return RedirectToAction(nameof(Index));
+            }
+
+            TempData["UserMessage"] = $"Enabled {user.Email}.";
 
             return RedirectToAction(nameof(Index));
         }
@@ -128,6 +204,7 @@ namespace Blog.Controllers
             public BlogUser User { get; set; }
             public IList<string> Roles { get; set; }
             public bool Locked { get; set; }
+            public bool IsAdministrator { get; set; }
         }
     }
 }

@@ -110,6 +110,15 @@ namespace Blog.Areas.Identity.Pages.Account
 
             if (ModelState.IsValid)
             {
+                var existingUser = await _signInManager.UserManager.FindByEmailAsync(Input.Email);
+                if (existingUser != null
+                    && existingUser.Disabled
+                    && await _signInManager.UserManager.CheckPasswordAsync(existingUser, Input.Password))
+                {
+                    _logger.LogWarning("Disabled user account attempted login.");
+                    return RedirectToPage("./Lockout");
+                }
+
                 var result = await _signInManager.PasswordSignInAsync(Input.Email, Input.Password, Input.RememberMe, lockoutOnFailure: true);
                 if (result.Succeeded)
                 {

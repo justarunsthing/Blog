@@ -32,6 +32,8 @@ namespace Blog.Models
         [StringLength(100, ErrorMessage = "The {0} must be at least {2} and no more han {1} characters", MinimumLength = 2)]
         public string TwitterUrl { get; set; }
 
+        public bool Disabled { get; set; }
+
         [NotMapped]
         public string FullName
         {

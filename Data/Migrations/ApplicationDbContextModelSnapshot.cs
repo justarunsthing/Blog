@@ -77,6 +77,9 @@ namespace Blog.Data.Migrations
                     b.Property<string>("ContentType")
                         .HasColumnType("text");
 
+                    b.Property<bool>("Disabled")
+                        .HasColumnType("boolean");
+
                     b.Property<string>("DisplayName")
                         .HasMaxLength(50)
                         .HasColumnType("character varying(50)");

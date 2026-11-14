@@ -116,6 +116,29 @@ app.UseHttpsRedirection();
 app.UseRouting();
 
 app.UseAuthentication();
+app.Use(async (context, next) =>
+{
+    if (Path.HasExtension(context.Request.Path) || context.Request.Path.StartsWithSegments("/Identity/Account/Lockout"))
+    {
+        await next();
+        return;
+    }
+
+    if (context.User.Identity?.IsAuthenticated == true)
+    {
+        var userManager = context.RequestServices.GetRequiredService<UserManager<BlogUser>>();
+        var user = await userManager.GetUserAsync(context.User);
+        if (user?.Disabled == true)
+        {
+            var signInManager = context.RequestServices.GetRequiredService<SignInManager<BlogUser>>();
+            await signInManager.SignOutAsync();
+            context.Response.Redirect("/Identity/Account/Lockout");
+            return;
+        }
+    }
+
+    await next();
+});
 app.UseAuthorization();
 
 app.MapStaticAssets();
