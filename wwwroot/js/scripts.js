@@ -3,6 +3,55 @@
 * Copyright 2013-2023 Start Bootstrap
 * Licensed under MIT (https://github.com/StartBootstrap/startbootstrap-clean-blog/blob/master/LICENSE)
 */
+document.addEventListener('submit', (event) => {
+    const form = event.target;
+
+    if (!(form instanceof HTMLFormElement)) {
+        return;
+    }
+
+    if (form.dataset.submitting === 'true') {
+        event.preventDefault();
+        event.stopPropagation();
+        return;
+    }
+
+    if (window.jQuery) {
+        const $form = window.jQuery(form);
+        $form.find('textarea').each(function () {
+            const $editor = window.jQuery(this);
+            if ($editor.data('summernote')) {
+                $editor.val($editor.summernote('code'));
+            }
+        });
+
+        if ($form.data('validator') && !$form.valid()) {
+            return;
+        }
+    }
+
+    form.dataset.submitting = 'true';
+    window.setTimeout(() => {
+        if (event.defaultPrevented) {
+            delete form.dataset.submitting;
+            return;
+        }
+
+        form.querySelectorAll('button[type="submit"], input[type="submit"]').forEach((control) => {
+            control.disabled = true;
+        });
+    }, 0);
+}, true);
+
+window.addEventListener('pageshow', () => {
+    document.querySelectorAll('form[data-submitting]').forEach((form) => {
+        delete form.dataset.submitting;
+        form.querySelectorAll('button[type="submit"], input[type="submit"]').forEach((control) => {
+            control.disabled = false;
+        });
+    });
+});
+
 window.addEventListener('DOMContentLoaded', () => {
     let scrollPos = 0;
     const mainNav = document.getElementById('mainNav');
