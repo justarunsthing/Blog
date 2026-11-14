@@ -67,9 +67,12 @@ builder.Services.AddScoped<SearchService>();
 // Register a pre-configured instance of MailSettings class
 builder.Services.Configure<MailSettings>(builder.Configuration.GetSection("MailSettings"));
 
-// Register the mailbox as Identity's email sender.
-builder.Services.AddScoped<IBlogEmailSender, EmailService>();
-builder.Services.AddScoped<IEmailSender>(sp => sp.GetRequiredService<IBlogEmailSender>());
+builder.Services.Configure<BrevoSettings>(builder.Configuration.GetSection("Brevo"));
+builder.Services.AddHttpClient<IBlogEmailSender, EmailService>(client =>
+{
+    client.BaseAddress = new Uri("https://api.brevo.com/");
+});
+builder.Services.AddTransient<IEmailSender>(sp => sp.GetRequiredService<IBlogEmailSender>());
 builder.Services.AddScoped<MailCooldown>();
 
 // Register image service
