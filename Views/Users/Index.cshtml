@@ -1,0 +1,56 @@
+@model IEnumerable<global::Blog.Controllers.UsersController.UserRow>
+@{
+    ViewData["Title"] = "Readers";
+    ViewData["MainText"] = "Readers";
+    ViewData["SubText"] = "Unlock an account, or send a reset or confirmation mail.";
+}
+@if (TempData["UserMessage"] is string message)
+{
+    <div class="alert alert-success" role="alert">@message</div>
+}
+<div class="table-wrap">
+    <table class="table align-middle">
+        <thead>
+            <tr>
+                <th>Name</th>
+                <th>Email</th>
+                <th>Confirmed</th>
+                <th>Locked</th>
+                <th>Roles</th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var row in Model)
+            {
+                <tr>
+                    <td>@row.User.FullName</td>
+                    <td>@row.User.Email</td>
+                    <td>@(row.User.EmailConfirmed ? "Yes" : "No")</td>
+                    <td>@(row.Locked ? row.User.LockoutEnd?.UtcDateTime.ToString("dd MMM yyyy HH:mm") + " UTC" : "No")</td>
+                    <td>@(row.Roles.Any() ? string.Join(", ", row.Roles) : "Reader")</td>
+                    <td>
+                        @if (row.Locked)
+                        {
+                            <form asp-action="Unlock" method="post" class="d-inline">
+                                <input type="hidden" name="id" value="@row.User.Id" />
+                                <button type="submit" class="btn btn-sm btn-dark">Unlock</button>
+                            </form>
+                        }
+                        <form asp-action="SendPasswordReset" method="post" class="d-inline">
+                            <input type="hidden" name="id" value="@row.User.Id" />
+                            <button type="submit" class="btn btn-sm btn-outline-ink">Send reset</button>
+                        </form>
+                        @if (!row.User.EmailConfirmed)
+                        {
+                            <form asp-action="SendConfirmation" method="post" class="d-inline">
+                                <input type="hidden" name="id" value="@row.User.Id" />
+                                <button type="submit" class="btn btn-sm btn-outline-ink">Send confirmation</button>
+                            </form>
+                        }
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>
