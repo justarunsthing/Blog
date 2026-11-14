@@ -5,4 +5,13 @@
 }
 
 <h1>@ViewData["Title"]</h1>
-<partial name="_StatusMessage" model="Model.StatusMessage" />
+@if (Model.Confirmed)
+{
+    <p>
+        Thank you for confirming your email. Please <a asp-page="./Login">click here to log in</a>.
+    </p>
+}
+else
+{
+    <partial name="_StatusMessage" model="Model.StatusMessage" />
+}
