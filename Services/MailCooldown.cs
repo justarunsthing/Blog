@@ -10,6 +10,7 @@ namespace Blog.Services
         public const string Contact = "Contact";
         public const string Registration = "Registration";
         public const string PasswordReset = "PasswordReset";
+        public const string EmailConfirmation = "EmailConfirmation";
         public static readonly TimeSpan ContactWindow = TimeSpan.FromMinutes(10);
         public static readonly TimeSpan AccountWindow = TimeSpan.FromMinutes(2);
 

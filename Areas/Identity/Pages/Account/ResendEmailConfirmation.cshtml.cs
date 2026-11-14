@@ -15,6 +15,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.AspNetCore.WebUtilities;
 using Blog.Interfaces;
+using Blog.Services;
 
 namespace Blog.Areas.Identity.Pages.Account
 {
@@ -23,11 +24,13 @@ namespace Blog.Areas.Identity.Pages.Account
     {
         private readonly UserManager<BlogUser> _userManager;
         private readonly IBlogEmailSender _emailSender;
+        private readonly MailCooldown _mailCooldown;
 
-        public ResendEmailConfirmationModel(UserManager<BlogUser> userManager, IBlogEmailSender emailSender)
+        public ResendEmailConfirmationModel(UserManager<BlogUser> userManager, IBlogEmailSender emailSender, MailCooldown mailCooldown)
         {
             _userManager = userManager;
             _emailSender = emailSender;
+            _mailCooldown = mailCooldown;
         }
 
         /// <summary>
@@ -60,6 +63,13 @@ namespace Blog.Areas.Identity.Pages.Account
         {
             if (!ModelState.IsValid)
             {
+                return Page();
+            }
+
+            var remoteIp = HttpContext.Connection.RemoteIpAddress?.ToString();
+            if (!await _mailCooldown.TryBeginAsync(MailCooldown.EmailConfirmation, Input.Email, remoteIp, MailCooldown.AccountWindow))
+            {
+                ModelState.AddModelError(string.Empty, "Please wait 2 minutes before requesting another confirmation.");
                 return Page();
             }
 
