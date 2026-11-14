@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Http.Features;
 using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Identity.UI.Services;
 using Microsoft.EntityFrameworkCore;
 
@@ -29,9 +30,14 @@ builder.Services.AddDataProtection()
     .PersistKeysToDbContext<ApplicationDbContext>();
 
 builder.Services.AddIdentity<BlogUser, IdentityRole>(options => options.SignIn.RequireConfirmedAccount = true)
-    .AddDefaultUI()
     .AddDefaultTokenProviders()
     .AddEntityFrameworkStores<ApplicationDbContext>();
+builder.Services.ConfigureApplicationCookie(options =>
+{
+    options.LoginPath = "/Identity/Account/Login";
+    options.LogoutPath = "/Identity/Account/Logout";
+    options.AccessDeniedPath = "/Identity/Account/AccessDenied";
+});
 builder.Services.Configure<FormOptions>(options =>
 {
     options.MultipartBodyLengthLimit = ImageService.MaxRequestBytes;
@@ -42,7 +48,11 @@ builder.WebHost.ConfigureKestrel(options =>
 });
 
 builder.Services.AddControllersWithViews();
-builder.Services.AddRazorPages();
+builder.Services.AddRazorPages(options =>
+{
+    options.Conventions.AuthorizeAreaFolder("Identity", "/Account/Manage");
+    options.Conventions.AuthorizeAreaPage("Identity", "/Account/Logout");
+});
 
 // Register custom DataService class
 builder.Services.AddScoped<DataService>();
@@ -51,7 +61,7 @@ builder.Services.AddScoped<SearchService>();
 // Register a pre-configured instance of MailSettings class
 builder.Services.Configure<MailSettings>(builder.Configuration.GetSection("MailSettings"));
 
-// Register email service after AddDefaultUI so it replaces Identity's sender.
+// Register the mailbox as Identity's email sender.
 builder.Services.AddScoped<IBlogEmailSender, EmailService>();
 builder.Services.AddScoped<IEmailSender>(sp => sp.GetRequiredService<IBlogEmailSender>());
 builder.Services.AddScoped<MailCooldown>();
