@@ -29,7 +29,10 @@
             </div>
             <div class="form-group">
                 <label asp-for="Input.ImageFile" class="form-label"></label>
-                <input type="file" asp-for="Input.ImageFile" class="form-control" accept=".jpg,.jpeg,.png,.gif,.webp" />
+                <div class="register-image">
+                    <img id="register-image-preview" class="register-preview" src="@Model.DefaultImage" alt="Profile photo" />
+                    <input type="file" asp-for="Input.ImageFile" class="form-control" accept=".jpg,.jpeg,.png,.gif,.webp" />
+                </div>
                 <span asp-validation-for="Input.ImageFile" class="text-danger"></span>
             </div>
             <div class="form-floating mb-3">
@@ -53,4 +56,28 @@
 
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
+    <script>
+        (function () {
+            var input = document.getElementById("Input_ImageFile");
+            var preview = document.getElementById("register-image-preview");
+            if (!input || !preview) {
+                return;
+            }
+
+            var fallback = preview.getAttribute("src");
+            input.addEventListener("change", function () {
+                var file = input.files && input.files[0];
+                if (!file) {
+                    preview.src = fallback;
+                    return;
+                }
+
+                var reader = new FileReader();
+                reader.onload = function () {
+                    preview.src = reader.result;
+                };
+                reader.readAsDataURL(file);
+            });
+        })();
+    </script>
 }

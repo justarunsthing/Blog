@@ -40,9 +40,7 @@ body {
 #mainNav .navbar-brand,
 #mainNav.is-fixed .navbar-brand,
 #mainNav .navbar-nav > li.nav-item > a.nav-link,
-#mainNav.is-fixed .navbar-nav > li.nav-item > a,
-#mainNav .navbar-nav > li.nav-item > a.nav-link:hover,
-#mainNav.is-fixed .navbar-nav > li.nav-item > a:hover {
+#mainNav.is-fixed .navbar-nav > li.nav-item > a {
     color: var(--ink);
 }
 
@@ -56,11 +54,19 @@ body {
     #mainNav .navbar-brand,
     #mainNav .navbar-brand:hover,
     #mainNav .navbar-nav > li.nav-item > a.nav-link,
-    #mainNav .navbar-nav > li.nav-item > a.nav-link:hover,
     #mainNav.is-fixed .navbar-brand,
     #mainNav.is-fixed .navbar-nav > li.nav-item > a {
         color: var(--ink);
     }
+}
+
+#mainNav .navbar-nav > li.nav-item > a.nav-link:hover,
+#mainNav .navbar-nav > li.nav-item > a.nav-link:focus,
+#mainNav.is-fixed .navbar-nav > li.nav-item > a:hover,
+#mainNav.is-fixed .navbar-nav > li.nav-item > a:focus,
+#navbarResponsive form button.nav-link:hover,
+#navbarResponsive form button.nav-link:focus {
+    color: var(--copper);
 }
 
 .navbar-brand {
@@ -611,6 +617,27 @@ header.masthead .post-heading .subheading {
 .editor {
     max-width: 46rem;
     margin: 0 auto;
+}
+
+.register-image {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.register-preview {
+    display: block;
+    flex: 0 0 96px;
+    width: 96px;
+    height: 96px;
+    object-fit: cover;
+    border-radius: 50%;
+    background: #e7e1d8;
+}
+
+.register-image .form-control {
+    flex: 1 1 auto;
+    min-width: 0;
 }
 
 .form-group,

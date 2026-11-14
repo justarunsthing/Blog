@@ -76,6 +76,8 @@ namespace Blog.Areas.Identity.Pages.Account
         /// </summary>
         public IList<AuthenticationScheme> ExternalLogins { get; set; }
 
+        public string DefaultImage { get; private set; }
+
         /// <summary>
         ///     This API supports the ASP.NET Core Identity default UI infrastructure and is not intended to be used
         ///     directly from your code. This API may change or be removed in future releases.
@@ -132,12 +134,14 @@ namespace Blog.Areas.Identity.Pages.Account
         public async Task OnGetAsync(string returnUrl = null)
         {
             ReturnUrl = returnUrl;
+            DefaultImage = DefaultImagePath();
             ExternalLogins = (await _signInManager.GetExternalAuthenticationSchemesAsync()).ToList();
         }
 
         public async Task<IActionResult> OnPostAsync(string returnUrl = null)
         {
             returnUrl ??= Url.Content("~/");
+            DefaultImage = DefaultImagePath();
             ExternalLogins = (await _signInManager.GetExternalAuthenticationSchemesAsync()).ToList();
             var upload = await _imageService.ReadUploadAsync(Input?.ImageFile);
 
@@ -204,6 +208,12 @@ namespace Blog.Areas.Identity.Pages.Account
 
             // If we got this far, something failed, redisplay form
             return Page();
+        }
+
+        private string DefaultImagePath()
+        {
+            var fileName = _configuration["DefaultUserImage"] ?? "default-image-user.jpg";
+            return Url.Content($"~/img/{fileName}");
         }
 
         private BlogUser CreateUser()
