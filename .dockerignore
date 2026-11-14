@@ -1,0 +1,4 @@
+bin/
+obj/
+Blog.Tests/
+.git/
