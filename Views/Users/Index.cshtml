@@ -1,7 +1,7 @@
 @model IEnumerable<global::Blog.Controllers.UsersController.UserRow>
 @{
-    ViewData["Title"] = "Readers";
-    ViewData["MainText"] = "Readers";
+    ViewData["Title"] = "Users";
+    ViewData["MainText"] = "Users";
     ViewData["SubText"] = "Unlock an account, or send a reset or confirmation mail.";
 }
 @if (TempData["UserMessage"] is string message)
@@ -28,7 +28,7 @@
                     <td>@row.User.Email</td>
                     <td>@(row.User.EmailConfirmed ? "Yes" : "No")</td>
                     <td>@(row.Locked ? row.User.LockoutEnd?.UtcDateTime.ToString("dd MMM yyyy HH:mm") + " UTC" : "No")</td>
-                    <td>@(row.Roles.Any() ? string.Join(", ", row.Roles) : "Reader")</td>
+                    <td>@(row.Roles.Any() ? string.Join(", ", row.Roles) : "User")</td>
                     <td>
                         @if (row.Locked)
                         {

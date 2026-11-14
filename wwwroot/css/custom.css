@@ -15,6 +15,9 @@ html {
 }
 
 body {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
     background: var(--paper);
     color: var(--ink);
     font-family: "Open Sans", "Helvetica Neue", Helvetica, Arial, sans-serif;
@@ -107,17 +110,25 @@ body {
     gap: 0.25rem;
 }
 
+.nav-auth > .nav-item {
+    display: flex;
+    align-items: center;
+}
+
 .nav-login,
 #mainNav .nav-login {
+    display: inline-flex;
+    align-items: center;
     margin-left: 0.4rem;
     color: #fff !important;
     background: var(--ink);
     border: 0;
     border-radius: 999px;
     padding: 0.45rem 0.9rem;
-    font-size: 0.75rem;
+    font-size: 0.78rem;
     font-weight: 700;
     letter-spacing: 0.08em;
+    line-height: 1;
     text-transform: uppercase;
 }
 
@@ -217,6 +228,7 @@ header.masthead .post-heading .subheading {
 }
 
 .site-main {
+    flex: 1 0 auto;
     padding: 2.75rem 0 4.5rem;
 }
 
@@ -720,9 +732,28 @@ textarea.form-control {
 }
 
 footer.site-footer {
-    padding: 2rem 0 2.4rem;
+    /* Same bar as #mainNav below the lg breakpoint: 0.5rem padding, menu button, 1px border. */
+    box-sizing: border-box;
+    display: flex;
+    align-items: center;
+    height: calc(1rem + 38.5px + 1px);
+    padding: 0;
     background: #1c1917;
     color: rgba(255, 255, 255, 0.72);
+}
+
+@media (min-width: 992px) {
+    footer.site-footer {
+        /* Same bar as #mainNav: 0.5rem padding, 1rem link padding, 0.78rem line, 1px border. */
+        height: calc(4.17rem + 1px);
+    }
+}
+
+footer.site-footer > .container {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
 }
 
 .footer-brand {
@@ -730,18 +761,34 @@ footer.site-footer {
     font-weight: 800;
     letter-spacing: -0.03em;
     text-decoration: none;
+    white-space: nowrap;
+}
+
+.footer-meta {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 0.85rem;
+    min-width: 0;
+}
+
+.footer-social {
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+    flex: none;
 }
 
 .social-link {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    width: 2.4rem;
-    height: 2.4rem;
-    margin: 0 0.25rem;
+    width: 1.85rem;
+    height: 1.85rem;
     border-radius: 50%;
     background: rgba(255, 255, 255, 0.08);
     color: #fff;
+    font-size: 0.85rem;
     text-decoration: none;
 }
 
@@ -751,8 +798,11 @@ footer.site-footer {
 }
 
 .footer-copy {
-    margin-top: 0.8rem;
-    font-size: 0.82rem;
+    margin: 0;
+    font-size: 0.78rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 ::-webkit-scrollbar {

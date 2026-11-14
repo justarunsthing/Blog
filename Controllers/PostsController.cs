@@ -104,8 +104,6 @@ namespace Blog.Controllers
         // GET: Posts/Details/{slug}
         public async Task<IActionResult> Details(string slug)
         {
-            ViewData["Title"] = "Post Details Page";
-
             if (string.IsNullOrEmpty(slug))
             {
                 return NotFound();
@@ -135,6 +133,7 @@ namespace Blog.Controllers
                         .ToListAsync()
             };
 
+            ViewData["Title"] = post.Title;
             ViewData["HeaderImage"] = _imageService.DecodeImage(post.ImageData, post.ContentType);
             ViewData["MainText"] = post.Title;
             ViewData["SubText"] = post.Abstract;

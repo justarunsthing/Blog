@@ -12,7 +12,6 @@
     ViewData["Title"] = "Posts";
     ViewData["MainText"] = "Posts";
     ViewData["SubText"] = "Published pieces from this blog.";
-    ViewData["HeaderImage"] = "/img/tim-mossholder-IQJbbw72PZc-unsplash.jpg";
 }
 
 <div class="section-head">
@@ -35,14 +34,13 @@ else
         {
             var isAuthor = User.Identity.IsAuthenticated && post.AuthorId == userManager.GetUserId(User);
             var image = imageService.DecodeImage(post.ImageData, post.ContentType);
-            if (string.IsNullOrEmpty(image))
-            {
-                image = "/img/post-sample-image.jpg";
-            }
 
             <article class="story-card">
                 <a class="story-card-media" asp-action="Details" asp-route-slug="@post.Slug">
-                    <img src="@image" alt="" />
+                    @if (!string.IsNullOrEmpty(image))
+                    {
+                        <img src="@image" alt="" />
+                    }
                 </a>
                 <div class="story-card-body">
                     <p class="story-meta">@post.Created.ToString("dd MMM yyyy")</p>

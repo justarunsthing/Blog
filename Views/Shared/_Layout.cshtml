@@ -6,7 +6,18 @@
 	<meta name="description" content="justarunsthing's Tech Blog" />
 	<meta name="author" content="justarunsthing" />
 
-	<title>@ViewData["Title"]</title>
+	@{
+		const string titlePrefix = "justarunsthing's Tech Blog - ";
+		var pageTitle = ViewData["Title"]?.ToString()?.Trim();
+		var documentTitle = string.IsNullOrEmpty(pageTitle)
+			? "justarunsthing's Tech Blog"
+			: pageTitle.StartsWith(titlePrefix, StringComparison.Ordinal)
+				? pageTitle
+				: titlePrefix + pageTitle;
+	}
+	<title>@documentTitle</title>
+	<link rel="icon" type="image/png" href="~/img/arunpun-favicon.png" />
+	<link rel="apple-touch-icon" href="~/img/arunpun-favicon.png" />
 
 	<script src="//use.fontawesome.com/releases/v6.3.0/js/all.js" crossorigin="anonymous"></script>
 	<link href="//fonts.googleapis.com/css?family=Lora:400,700,400italic,700italic" rel="stylesheet" type="text/css" />
@@ -18,12 +29,8 @@
 <body>
 	@{
 		var headerImage = ViewData["HeaderImage"] as string;
-		if (string.IsNullOrWhiteSpace(headerImage))
-		{
-			headerImage = "/img/nasa-Q1p7bh3SHj8-unsplash.jpg";
-		}
-
-		var photoHeader = !headerImage.StartsWith("data:", StringComparison.OrdinalIgnoreCase);
+		var photoHeader = !string.IsNullOrWhiteSpace(headerImage)
+			&& !headerImage.StartsWith("data:", StringComparison.OrdinalIgnoreCase);
 
 		var mainText = ViewData["MainText"] as string;
 		if (string.IsNullOrWhiteSpace(mainText))
@@ -38,7 +45,6 @@
 	<nav class="navbar navbar-expand-lg" id="mainNav">
 		<div class="container px-4 px-lg-5">
 			<a class="navbar-brand" asp-controller="Home" asp-action="Index">
-				<span class="brand-mark">ja</span>
 				<span class="brand-name">justarun<span>sthing</span></span>
 			</a>
 			<button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarResponsive" aria-controls="navbarResponsive" aria-expanded="false" aria-label="Toggle navigation">
@@ -104,17 +110,22 @@
 	</main>
 
 	<footer class="site-footer">
-		<div class="container px-4 px-lg-5 text-center">
+		<div class="container px-4 px-lg-5">
 			<a class="footer-brand" asp-controller="Home" asp-action="Index">justarunsthing</a>
-			<div class="mt-3">
-				<a class="social-link" href="https://github.com/justarunsthing" target="_blank" aria-label="GitHub">
-					<i class="fab fa-github"></i>
-				</a>
-				<a class="social-link" href="https://www.instagram.com/justarunsthing" target="_blank" aria-label="Instagram">
-					<i class="fab fa-instagram"></i>
-				</a>
+			<div class="footer-meta">
+				<div class="footer-copy">
+					<span class="d-none d-md-inline">Copyright &copy; justarunsthing @DateTime.Now.Year</span>
+					<span class="d-md-none">&copy; @DateTime.Now.Year</span>
+				</div>
+				<div class="footer-social">
+					<a class="social-link" href="https://github.com/justarunsthing" target="_blank" aria-label="GitHub">
+						<i class="fab fa-github"></i>
+					</a>
+					<a class="social-link" href="https://www.instagram.com/justarunsthing" target="_blank" aria-label="Instagram">
+						<i class="fab fa-instagram"></i>
+					</a>
+				</div>
 			</div>
-			<div class="footer-copy">Copyright &copy; justarunsthing @DateTime.Now.Year</div>
 		</div>
 	</footer>
 

@@ -3,7 +3,6 @@ const swalButton = Swal.mixin({
     customClass: {
         confirmButton: 'btn btn-primary'
     },
-    imageUrl: '/img/post-sample-image.jpg',
     timer: 3000,
     buttonsStyling: false
 });

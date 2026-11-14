@@ -13,7 +13,6 @@
     ViewData["SubText"] = string.IsNullOrWhiteSpace(ViewData["SearchTerm"] as string)
         ? "Look through published posts."
         : $"Results for \"{ViewData["SearchTerm"]}\"";
-    ViewData["HeaderImage"] = "/img/drew-beamer-3SIXZisims4-unsplash.jpg";
     ViewData["ShowSearchBar"] = true;
 }
 
@@ -29,14 +28,13 @@ else
         @foreach (var post in Model)
         {
             var image = imageService.DecodeImage(post.ImageData, post.ContentType);
-            if (string.IsNullOrEmpty(image))
-            {
-                image = "/img/post-sample-image.jpg";
-            }
 
             <article class="story-card">
                 <a class="story-card-media" asp-action="Details" asp-route-slug="@post.Slug">
-                    <img src="@image" alt="" />
+                    @if (!string.IsNullOrEmpty(image))
+                    {
+                        <img src="@image" alt="" />
+                    }
                 </a>
                 <div class="story-card-body">
                     <p class="story-meta">@post.Created.ToString("dd MMM yyyy")</p>

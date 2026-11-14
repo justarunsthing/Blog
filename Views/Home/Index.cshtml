@@ -12,7 +12,6 @@
     ViewData["Title"] = "justarunsthing's Tech Blog - Home";
     ViewData["MainText"] = "justarunsthing";
     ViewData["SubText"] = "Writing about software, side projects, and the details that usually stay in a notebook.";
-    ViewData["HeaderImage"] = "/img/nasa-Q1p7bh3SHj8-unsplash.jpg";
     ViewData["ShowSearchBar"] = true;
 }
 
@@ -32,17 +31,17 @@
 else
 {
     <div class="story-grid">
+
         @foreach (var blog in Model)
         {
             var image = imageService.DecodeImage(blog.ImageData, blog.ContentType);
-            if (string.IsNullOrEmpty(image))
-            {
-                image = "/img/home-bg.jpg";
-            }
 
             <article class="story-card">
                 <a class="story-card-media" asp-controller="Posts" asp-action="BlogPostIndex" asp-route-id="@blog.Id">
-                    <img src="@image" alt="" />
+                    @if (!string.IsNullOrEmpty(image))
+                    {
+                        <img src="@image" alt="" />
+                    }
                 </a>
                 <div class="story-card-body">
                     <p class="story-meta">@blog.Created.ToString("dd MMM yyyy")@(blog.Author != null ? $" · {blog.Author.FullName}" : "")</p>
@@ -50,6 +49,7 @@ else
                     <p class="card-text" title="@blog.Description">@blog.Description</p>
                     <div class="story-actions">
                         <a class="btn btn-dark" asp-controller="Posts" asp-action="BlogPostIndex" asp-route-id="@blog.Id">Read posts</a>
+
                         @if (User.IsInRole(BlogRole.Administrator.ToString()))
                         {
                             <a class="btn btn-outline-ink" asp-controller="Posts" asp-action="Create" asp-route-id="@blog.Id">New post</a>
