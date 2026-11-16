@@ -1,9 +1,7 @@
 ﻿@using Blog.Enums
-@using Blog.Interfaces
 @using Blog.ViewModels
 @using Microsoft.AspNetCore.Identity
 @model PostDetailViewModel
-@inject IImageService imageService
 @inject UserManager<BlogUser> userManager
 
 <div class="post-layout">
@@ -16,12 +14,13 @@
         {
             <p class="post-status">Draft. Only you and an administrator can open this.</p>
         }
-        @{
-            var cover = imageService.DecodeImage(Model.Post.ImageData, Model.Post.ContentType);
-        }
-        @if (!string.IsNullOrEmpty(cover))
+        @if (Model.Post.Published is DateTime published)
         {
-            <img class="post-cover" src="@cover" alt="" />
+            <p class="story-meta mb-3">@published.ToString("dd MMM yyyy")</p>
+        }
+        @if (!string.IsNullOrWhiteSpace(Model.Post.ContentType))
+        {
+            <img class="post-cover" src="/media/posts/@Model.Post.Id?v=@((Model.Post.Updated ?? Model.Post.Created).Ticks)" alt="" />
         }
         <div class="post-body">
             @Html.Raw(Model.Post.Content)
@@ -86,13 +85,12 @@
     <div class="mt-4">
         @foreach (var comment in Model.Post.Comments.OrderByDescending(c => c.Created))
         {
-            var avatar = imageService.DecodeImage(comment.Author?.ImageData, comment.Author?.ContentType);
             var canEdit = comment.Moderated == null && comment.Deleted == null && comment.AuthorId == userManager.GetUserId(User);
             var canModerate = User.IsInRole(BlogRole.Moderator.ToString()) && comment.Deleted == null;
             <article class="comment-card">
-                @if (!string.IsNullOrEmpty(avatar))
+                @if (!string.IsNullOrWhiteSpace(comment.Author?.ContentType))
                 {
-                    <img src="@avatar" alt="" />
+                    <img src="/media/users/@comment.Author.Id?v=@Uri.EscapeDataString(comment.Author.ConcurrencyStamp ?? "")" alt="" />
                 }
                 else
                 {
@@ -203,3 +201,16 @@
         }
     </div>
 </section>
+
+@section Styles {
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/styles/github-dark.min.css" />
+}
+
+@section Scripts {
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/highlight.min.js"></script>
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            hljs.highlightAll();
+        });
+    </script>
+}

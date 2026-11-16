@@ -30,6 +30,11 @@ namespace Blog.Models
         [DataType(DataType.Date)]
         [Display(Name = "Updated On")]
         public DateTime? Updated { get; set; }
+
+        [DataType(DataType.Date)]
+        [Display(Name = "Published On")]
+        public DateTime? Published { get; set; }
+
         public ReadyStatus Status { get; set; }
         public string Slug { get; set; }
         public byte[] ImageData { get; set; }

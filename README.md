@@ -11,29 +11,40 @@ An ASP.NET Core MVC blog. A blog is a subject. Posts live inside a blog. A post 
 - Write a post with an abstract, body, tags, an image, and a status of Incomplete, Preview, or Production.
 - Comment on a post.
 - Moderate a comment. Moderation stores a revised body, a reason, the time, and the signed-in user. Reasons include offensive language, hate speech, threatening speech, and the other values on `ModerationType`.
-- Send a message from the contact page. Mail goes out through MailKit over SMTP.
+- Send a message from the contact page. Mail goes out through the Brevo HTTP API.
 
-Images for blogs and posts are stored on the row. New accounts must confirm their email before they can sign in. The seeded administrator is already confirmed.
+Images for blogs, posts, and users are stored on the row (`ImageData` and `ContentType`) and served from `/media/blogs/{id}`, `/media/posts/{id}`, and `/media/users/{id}`. New accounts must confirm their email before they can sign in. The seeded administrator is already confirmed.
+
+The live site runs on Render at https://justarunsthing-tech-blog.onrender.com.
 
 ## Run it
 
 You need the .NET 9 SDK and PostgreSQL.
 
-Point `ConnectionStrings:DefaultConnection` at your server. The project uses Npgsql. From the repository root you can override the checked-in local string with a user secret:
+The app reads `ConnectionStrings:DefaultConnection` through Npgsql. Do not commit a password. Locally, put the connection string in user secrets or in the environment. On Render, set `ConnectionStrings__DefaultConnection` to the Neon URL and include SSL (`sslmode=require`).
 
 ```bash
 dotnet user-secrets set "ConnectionStrings:DefaultConnection" "Host=localhost;Port=5432;Database=Blog;Username=postgres;Password=YOUR_PASSWORD"
 ```
 
-Put SMTP settings in user secrets as well. Do not commit the mailbox password.
+`appsettings.json` keeps a local template with host, port, database, and username, and an empty password. The real string comes from user secrets or `ConnectionStrings__DefaultConnection`.
+
+Startup applies EF Core migrations. It creates roles only when the database has no roles, and one administrator only when the database has no users. Set both values before that first boot. The environment variables are `Seed__Email` and `Seed__Password`. The config keys are `Seed:Email` and `Seed:Password`.
 
 ```bash
-dotnet user-secrets set "MailSettings:Mail" "you@gmail.com"
-dotnet user-secrets set "MailSettings:DisplayName" "justarunsthing"
-dotnet user-secrets set "MailSettings:Password" "YOUR_APP_PASSWORD"
-dotnet user-secrets set "MailSettings:Host" "smtp.gmail.com"
-dotnet user-secrets set "MailSettings:Port" "587"
+dotnet user-secrets set "Seed:Email" "you@example.com"
+dotnet user-secrets set "Seed:Password" "YOUR_PASSWORD"
 ```
+
+`Services/DataService.cs` creates every `BlogRole` (Administrator and Moderator) when the roles table is empty. When the users table is empty, it creates one user with the configured email and password, hardcodes the first name Arun and the last name Pun, marks the email confirmed, and adds that user to Administrator and Moderator.
+
+Mail is Brevo. `EmailService` posts JSON to `https://api.brevo.com/v3/smtp/email` with the `api-key` header. Set `Brevo:ApiKey` (`Brevo__ApiKey` in the environment). Do not put the key in `appsettings.json`. The from address and the sender name are `MailSettings:Mail` and `MailSettings:DisplayName`.
+
+```bash
+dotnet user-secrets set "Brevo:ApiKey" "YOUR_BREVO_API_KEY"
+```
+
+Render sets `PORT`. `Program.cs` already listens on it.
 
 Start the site:
 
@@ -43,11 +54,9 @@ dotnet run --launch-profile https
 
 Open `https://localhost:7244`.
 
-Startup applies migrations and seeds roles and the administrator if the database is empty.
-
 ## Stack
 
 - .NET 9, ASP.NET Core MVC, Razor, Identity
 - Entity Framework Core, Npgsql, PostgreSQL
-- MailKit
+- Brevo HTTP API
 - X.PagedList

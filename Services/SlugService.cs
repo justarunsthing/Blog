@@ -10,7 +10,8 @@ namespace Blog.Services
 
         public bool IsUnique(string slug)
         {
-            return !_dbContext.Posts.Any(p => p.Slug == slug);
+            return !_dbContext.Posts.Any(post => post.Slug == slug)
+                && !_dbContext.PostAliases.Any(alias => alias.Slug == slug);
         }
 
         public string UrlFriendly(string title)

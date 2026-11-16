@@ -266,6 +266,9 @@ namespace Blog.Data.Migrations
                     b.Property<byte[]>("ImageData")
                         .HasColumnType("bytea");
 
+                    b.Property<DateTime?>("Published")
+                        .HasColumnType("timestamp with time zone");
+
                     b.Property<string>("Slug")
                         .HasColumnType("text");
 
@@ -286,7 +289,34 @@ namespace Blog.Data.Migrations
 
                     b.HasIndex("BlogId");
 
+                    b.HasIndex("Slug")
+                        .IsUnique();
+
                     b.ToTable("Posts");
+                });
+
+            modelBuilder.Entity("Blog.Models.PostAlias", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("PostId")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Slug")
+                        .HasColumnType("text");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("PostId");
+
+                    b.HasIndex("Slug")
+                        .IsUnique();
+
+                    b.ToTable("PostAliases");
                 });
 
             modelBuilder.Entity("Blog.Models.Tag", b =>
@@ -515,6 +545,17 @@ namespace Blog.Data.Migrations
                     b.Navigation("Author");
 
                     b.Navigation("Blog");
+                });
+
+            modelBuilder.Entity("Blog.Models.PostAlias", b =>
+                {
+                    b.HasOne("Blog.Models.Post", "Post")
+                        .WithMany()
+                        .HasForeignKey("PostId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Post");
                 });
 
             modelBuilder.Entity("Blog.Models.Tag", b =>

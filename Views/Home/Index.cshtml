@@ -1,12 +1,11 @@
 ﻿@using Blog.Enums
-@using Blog.Interfaces
+@using Blog.ViewModels
 @using Microsoft.AspNetCore.Identity
 @using X.PagedList
 @using X.PagedList.Mvc.Core
-@inject IImageService imageService
 @inject UserManager<BlogUser> userManager
 
-@model IPagedList<Blog>
+@model IPagedList<BlogCard>
 
 @{
     ViewData["Title"] = "justarunsthing's Tech Blog - Home";
@@ -34,17 +33,15 @@ else
 
         @foreach (var blog in Model)
         {
-            var image = imageService.DecodeImage(blog.ImageData, blog.ContentType);
-
             <article class="story-card">
                 <a class="story-card-media" asp-controller="Posts" asp-action="BlogPostIndex" asp-route-id="@blog.Id">
-                    @if (!string.IsNullOrEmpty(image))
+                    @if (!string.IsNullOrWhiteSpace(blog.ContentType))
                     {
-                        <img src="@image" alt="" />
+                        <img src="/media/blogs/@blog.Id?v=@((blog.Updated ?? blog.Created).Ticks)" alt="" />
                     }
                 </a>
                 <div class="story-card-body">
-                    <p class="story-meta">@blog.Created.ToString("dd MMM yyyy")@(blog.Author != null ? $" · {blog.Author.FullName}" : "")</p>
+                    <p class="story-meta">@blog.LatestPublished.ToString("dd MMM yyyy")@(blog.Author != null ? $" · {blog.Author.FullName}" : "")</p>
                     <h3>@blog.Name</h3>
                     <p class="card-text" title="@blog.Description">@blog.Description</p>
                     <div class="story-actions">

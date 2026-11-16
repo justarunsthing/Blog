@@ -1,6 +1,7 @@
 ﻿using Blog.Data;
 using Blog.Enums;
 using Blog.Models;
+using Microsoft.EntityFrameworkCore;
 
 namespace Blog.Services
 {
@@ -10,7 +11,7 @@ namespace Blog.Services
 
         public IQueryable<Post> Search(string searchTerm)
         {
-            var posts = _context.Posts.Where(p => p.Status == ReadyStatus.Production).AsQueryable();
+            var posts = _context.Posts.AsNoTracking().Where(p => p.Status == ReadyStatus.Production);
 
             if (searchTerm != null)
             {
@@ -22,7 +23,22 @@ namespace Blog.Services
                     p.Content.ToLower().Contains(searchTerm));
             }
 
-            return posts.OrderByDescending(p => p.Created);
+            return posts
+                .OrderByDescending(p => p.Published ?? p.Created)
+                .Select(post => new Post
+                {
+                    Id = post.Id,
+                    BlogId = post.BlogId,
+                    AuthorId = post.AuthorId,
+                    Title = post.Title,
+                    Abstract = post.Abstract,
+                    Created = post.Created,
+                    Updated = post.Updated,
+                    Published = post.Published,
+                    Status = post.Status,
+                    Slug = post.Slug,
+                    ContentType = post.ContentType
+                });
         }
     }
 }

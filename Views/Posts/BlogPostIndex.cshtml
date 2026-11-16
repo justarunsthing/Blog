@@ -1,11 +1,9 @@
 ﻿@using Blog.Enums
-@using Blog.Interfaces
 @using Microsoft.AspNetCore.Identity
 @using X.PagedList
 @using X.PagedList.Mvc.Core
 
 @model IPagedList<Post>
-@inject IImageService imageService
 @inject UserManager<BlogUser> userManager
 
 @{
@@ -33,17 +31,16 @@ else
         @foreach (var post in Model)
         {
             var isAuthor = User.Identity.IsAuthenticated && post.AuthorId == userManager.GetUserId(User);
-            var image = imageService.DecodeImage(post.ImageData, post.ContentType);
 
             <article class="story-card">
                 <a class="story-card-media" asp-action="Details" asp-route-slug="@post.Slug">
-                    @if (!string.IsNullOrEmpty(image))
+                    @if (!string.IsNullOrWhiteSpace(post.ContentType))
                     {
-                        <img src="@image" alt="" />
+                        <img src="/media/posts/@post.Id?v=@((post.Updated ?? post.Created).Ticks)" alt="" />
                     }
                 </a>
                 <div class="story-card-body">
-                    <p class="story-meta">@post.Created.ToString("dd MMM yyyy")</p>
+                    <p class="story-meta">@((post.Published ?? post.Created).ToString("dd MMM yyyy"))</p>
                     <h3>@post.Title</h3>
                     <p class="card-text">@post.Abstract</p>
                     <div class="story-actions">

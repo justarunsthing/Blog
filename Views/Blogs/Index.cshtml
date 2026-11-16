@@ -1,6 +1,4 @@
 ﻿@model IEnumerable<Blog>
-@using Blog.Interfaces
-@inject IImageService imageService
 
 @{
     ViewData["Title"] = "Blogs";
@@ -69,7 +67,10 @@ else
             @Html.DisplayFor(modelItem => item.Updated)
         </td>
         <td>
-            <img class="img-fluid" width="200px" src="@imageService.DecodeImage(item.ImageData, item.ContentType)" />
+            @if (!string.IsNullOrWhiteSpace(item.ContentType))
+            {
+                <img class="img-fluid" width="200px" src="/media/blogs/@item.Id?v=@((item.Updated ?? item.Created).Ticks)" alt="" />
+            }
         </td>
         <td>
             @if (User.IsInRole("Administrator"))

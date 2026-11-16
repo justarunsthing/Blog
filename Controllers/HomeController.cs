@@ -31,13 +31,35 @@ namespace Blog.Controllers
         {
             var pageNumber = page ?? 1;
             var pageSize = 5;
-            var blogs =  _context.Blogs
+            var blogs = _context.Blogs
+                .AsNoTracking()
                 .Where(b => b.Posts.Any(p => p.Status == ReadyStatus.Production))
-                .OrderByDescending(b => b.Created)
-                .Include(b => b.Author)
-                .ToPagedListAsync(pageNumber, pageSize);
+                .OrderByDescending(b => b.Posts
+                    .Where(p => p.Status == ReadyStatus.Production)
+                    .Max(p => p.Published ?? p.Created))
+                .Select(b => new BlogCard
+                {
+                    Id = b.Id,
+                    AuthorId = b.AuthorId,
+                    Name = b.Name,
+                    Description = b.Description,
+                    Created = b.Created,
+                    Updated = b.Updated,
+                    ContentType = b.ContentType,
+                    LatestPublished = b.Posts
+                        .Where(p => p.Status == ReadyStatus.Production)
+                        .Max(p => p.Published ?? p.Created),
+                    Author = b.Author == null
+                        ? null
+                        : new BlogUser
+                        {
+                            Id = b.Author.Id,
+                            FirstName = b.Author.FirstName,
+                            LastName = b.Author.LastName
+                        }
+                });
 
-            return View(await blogs);
+            return View(await blogs.ToPagedListAsync(pageNumber, pageSize));
         }
 
         public IActionResult About()
@@ -72,7 +94,17 @@ namespace Blog.Controllers
             var phone = WebUtility.HtmlEncode(model.Phone);
             var message = $"{WebUtility.HtmlEncode(model.Message)} <hr/> Phone: {phone}";
 
-            await _emailSender.SendContactEmailAsync(email, model.Subject, name, message);
+            try
+            {
+                await _emailSender.SendContactEmailAsync(email, model.Subject, name, message);
+            }
+            catch (Exception exception)
+            {
+                await _mailCooldown.ReleaseAsync(MailCooldown.Contact, model.Email, remoteIp);
+                _logger.LogError(exception, "Contact message could not be sent.");
+                ModelState.AddModelError(string.Empty, "The message could not be sent. Please try again.");
+                return View(model);
+            }
 
             TempData["SweetAlert"] = "Message sent.";
 

@@ -31,9 +31,19 @@ namespace Blog.Controllers
         public async Task<IActionResult> Index()
         {
             var blogs = _context.Blogs
+                .AsNoTracking()
                 .Where(b => b.Posts.Any(p => p.Status == ReadyStatus.Production))
                 .OrderByDescending(b => b.Created)
-                .Include(b => b.Author);
+                .Select(b => new Blog.Models.Blog
+                {
+                    Id = b.Id,
+                    AuthorId = b.AuthorId,
+                    Name = b.Name,
+                    Description = b.Description,
+                    Created = b.Created,
+                    Updated = b.Updated,
+                    ContentType = b.ContentType
+                });
 
             return View(await blogs.ToListAsync());
         }

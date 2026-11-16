@@ -20,7 +20,7 @@ namespace Blog.Services
         {
             var now = (utcNow ?? DateTimeOffset.UtcNow).UtcDateTime;
             var since = now - window;
-            var normalizedEmail = string.IsNullOrWhiteSpace(email) ? null : email.Trim().ToLowerInvariant();
+            var normalizedEmail = NormalizeEmail(email);
             var ip = NormalizeIp(remoteIp);
 
             await _context.MailSends.Where(send => send.Created < now - ContactWindow).ExecuteDeleteAsync();
@@ -45,6 +45,26 @@ namespace Blog.Services
             return true;
         }
 
+        public async Task ReleaseAsync(string purpose, string email, string remoteIp)
+        {
+            var normalizedEmail = NormalizeEmail(email);
+            var ip = NormalizeIp(remoteIp);
+
+            var latest = await _context.MailSends
+                .Where(send => send.Purpose == purpose && send.RemoteIp == ip && send.Email == normalizedEmail)
+                .OrderByDescending(send => send.Created)
+                .ThenByDescending(send => send.Id)
+                .FirstOrDefaultAsync();
+
+            if (latest == null)
+            {
+                return;
+            }
+
+            _context.MailSends.Remove(latest);
+            await _context.SaveChangesAsync();
+        }
+
         public static string NormalizeIp(string remoteIp)
         {
             if (string.IsNullOrWhiteSpace(remoteIp))
@@ -58,6 +78,11 @@ namespace Blog.Services
             }
 
             return remoteIp.Trim();
+        }
+
+        private static string NormalizeEmail(string email)
+        {
+            return string.IsNullOrWhiteSpace(email) ? null : email.Trim().ToLowerInvariant();
         }
     }
 }

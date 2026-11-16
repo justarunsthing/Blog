@@ -79,6 +79,46 @@ public class ContactRateLimitTests
     }
 
     [Fact]
+    public async Task Contact_ReleasesTheCooldownWhenSendingFails()
+    {
+        await using var database = new MailDatabase();
+        var sender = new ThrowingSender();
+        var firstController = CreateContactController(database, sender, "203.0.113.8");
+        var model = new ContactMe { Name = "Ada", Email = "Ada@Example.com", Subject = "Hello", Message = "A note" };
+
+        var firstResult = await firstController.Contact(model);
+
+        Assert.IsType<ViewResult>(firstResult);
+        Assert.False(firstController.ModelState.IsValid);
+        Assert.Contains("The message could not be sent. Please try again.", Errors(firstController));
+        Assert.Equal(0, await database.Context.MailSends.CountAsync());
+        Assert.Equal(1, sender.Attempts);
+
+        var secondController = CreateContactController(database, sender, "203.0.113.8");
+        var secondResult = await secondController.Contact(model);
+
+        Assert.IsType<ViewResult>(secondResult);
+        Assert.Contains("The message could not be sent. Please try again.", Errors(secondController));
+        Assert.DoesNotContain(Errors(secondController), message => message.Contains("Please wait"));
+        Assert.Equal(2, sender.Attempts);
+        Assert.Equal(0, await database.Context.MailSends.CountAsync());
+    }
+
+    private static HomeController CreateContactController(MailDatabase database, IBlogEmailSender sender, string remoteIp)
+    {
+        var controller = new HomeController(
+            NullLogger<HomeController>.Instance,
+            sender,
+            database.Context,
+            new MailCooldown(database.Context));
+        var httpContext = new DefaultHttpContext();
+        httpContext.Connection.RemoteIpAddress = IPAddress.Parse(remoteIp);
+        controller.ControllerContext = new ControllerContext { HttpContext = httpContext };
+        controller.TempData = new TempDataDictionary(httpContext, new DictionaryTempDataProvider());
+        return controller;
+    }
+
+    [Fact]
     public async Task ResendConfirmation_WaitsTwoMinutesEvenForAnUnknownAddress()
     {
         await using var database = new MailDatabase();
@@ -131,6 +171,11 @@ public class ContactRateLimitTests
         return page.ModelState.Values.SelectMany(entry => entry.Errors).Select(error => error.ErrorMessage);
     }
 
+    private static IEnumerable<string> Errors(Controller controller)
+    {
+        return controller.ModelState.Values.SelectMany(entry => entry.Errors).Select(error => error.ErrorMessage);
+    }
+
     private sealed class MailDatabase : IAsyncDisposable
     {
         private readonly SqliteConnection _connection;
@@ -169,6 +214,22 @@ public class ContactRateLimitTests
         public Task SendEmailAsync(string email, string subject, string htmlMessage)
         {
             ConfirmationSends++;
+            return Task.CompletedTask;
+        }
+    }
+
+    private sealed class ThrowingSender : IBlogEmailSender
+    {
+        public int Attempts { get; private set; }
+
+        public Task SendContactEmailAsync(string email, string subject, string name, string htmlMessage)
+        {
+            Attempts++;
+            throw new InvalidOperationException("Brevo rejected the message.");
+        }
+
+        public Task SendEmailAsync(string email, string subject, string htmlMessage)
+        {
             return Task.CompletedTask;
         }
     }

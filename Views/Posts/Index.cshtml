@@ -1,8 +1,6 @@
 ﻿@model IEnumerable<Post>
 @using Blog.Enums
-@using Blog.Interfaces
 @using Microsoft.AspNetCore.Identity
-@inject IImageService imageService
 @inject UserManager<BlogUser> userManager
 
 @{
@@ -66,7 +64,10 @@
                 @Html.DisplayFor(modelItem => item.Status)
             </td>
             <th>
-                <img class="img-fluid" width="200px" src="@imageService.DecodeImage(item.ImageData, item.ContentType)" />
+                @if (!string.IsNullOrWhiteSpace(item.ContentType))
+                {
+                    <img class="img-fluid" width="200px" src="/media/posts/@item.Id?v=@((item.Updated ?? item.Created).Ticks)" alt="" />
+                }
             </th>
             <td>
                 @if (User.IsInRole(BlogRole.Administrator.ToString()) || item.AuthorId == userManager.GetUserId(User))

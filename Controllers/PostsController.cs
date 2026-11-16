@@ -40,9 +40,7 @@ namespace Blog.Controllers
             var userId = _userManager.GetUserId(User);
             var isAdministrator = User.IsInRole(BlogRole.Administrator.ToString());
 
-            IQueryable<Post> posts = _context.Posts
-                .Include(p => p.Author)
-                .Include(p => p.Blog);
+            IQueryable<Post> posts = _context.Posts.AsNoTracking();
 
             if (!isAdministrator)
             {
@@ -51,7 +49,7 @@ namespace Blog.Controllers
                     (userId != null && p.AuthorId == userId));
             }
 
-            return View(await posts.OrderByDescending(p => p.Created).ToListAsync());
+            return View(await ProjectList(posts.OrderByDescending(p => p.Created)).ToListAsync());
         }
 
         public async Task<IActionResult> BlogPostIndex(int? id, int? page)
@@ -63,12 +61,12 @@ namespace Blog.Controllers
 
             var pageNumber = page ?? 1;
             var pageSize = 5;
-            var posts = await _context.Posts
+            var posts = ProjectList(_context.Posts
+                .AsNoTracking()
                 .Where(p => p.BlogId == id && p.Status == ReadyStatus.Production)
-                .OrderByDescending(p => p.Created)
-                .ToPagedListAsync(pageNumber, pageSize);
+                .OrderByDescending(p => p.Published ?? p.Created));
 
-            return View(posts);
+            return View(await posts.ToPagedListAsync(pageNumber, pageSize));
         }
 
         public async Task<IActionResult> SearchIndex(int? page, string searchTerm)
@@ -92,9 +90,10 @@ namespace Blog.Controllers
             var pageNumber = page ?? 1;
             var pageSize = 5;
             var normalized = tag.ToLower();
-            var posts = _context.Posts
+            var posts = ProjectList(_context.Posts
+                .AsNoTracking()
                 .Where(p => p.Status == ReadyStatus.Production && p.Tags.Any(t => t.Text.ToLower() == normalized))
-                .OrderByDescending(p => p.Created);
+                .OrderByDescending(p => p.Published ?? p.Created));
 
             ViewData["Tag"] = tag;
 
@@ -118,7 +117,21 @@ namespace Blog.Controllers
                 .ThenInclude(c => c.Moderator)
                 .FirstOrDefaultAsync(m => m.Slug == slug);
 
-            if (post == null || !CanRead(post))
+            if (post == null)
+            {
+                var alias = await _context.PostAliases
+                    .Include(postAlias => postAlias.Post)
+                    .FirstOrDefaultAsync(postAlias => postAlias.Slug == slug);
+
+                if (alias?.Post == null || !CanRead(alias.Post))
+                {
+                    return NotFound();
+                }
+
+                return new RedirectResult($"/BlogPosts/UrlFriendly/{alias.Post.Slug}", permanent: true);
+            }
+
+            if (!CanRead(post))
             {
                 return NotFound();
             }
@@ -134,7 +147,6 @@ namespace Blog.Controllers
             };
 
             ViewData["Title"] = post.Title;
-            ViewData["HeaderImage"] = _imageService.DecodeImage(post.ImageData, post.ContentType);
             ViewData["MainText"] = post.Title;
             ViewData["SubText"] = post.Abstract;
 
@@ -166,7 +178,9 @@ namespace Blog.Controllers
                 ModelState.AddModelError(nameof(post.Image), upload.Error);
             }
 
-            if (ModelState.IsValid)
+            var tagsAreValid = TryNormalizeTags(tagValues, out var tags);
+
+            if (ModelState.IsValid && tagsAreValid)
             {
                 var slug = _slugService.UrlFriendly(post.Title);
                 var slugError = false;
@@ -185,7 +199,7 @@ namespace Blog.Controllers
 
                 if (slugError)
                 {
-                    ViewData["TagValues"] = string.Join(",", tagValues);
+                    SetCreateViewData(post, tagValues);
 
                     return View(post);
                 }
@@ -198,11 +212,16 @@ namespace Blog.Controllers
                 post.ContentType = upload.ContentType;
                 post.Created = DateTime.UtcNow;
 
+                if (post.Status == ReadyStatus.Production && post.Published == null)
+                {
+                    post.Published = DateTime.UtcNow;
+                }
+
                 _context.Add(post);
 
                 await _context.SaveChangesAsync();
 
-                foreach (var tagText in tagValues)
+                foreach (var tagText in tags)
                 {
                     _context.Add(new Tag
                     {
@@ -217,8 +236,7 @@ namespace Blog.Controllers
                 return RedirectToAction(nameof(Index));
             }
 
-            ViewData["TagValues"] = string.Join(",", tagValues);
-            ViewData["BlogId"] = new SelectList(_context.Blogs, "Id", "Description", post.BlogId);
+            SetCreateViewData(post, tagValues);
 
             return View(post);
         }
@@ -282,77 +300,107 @@ namespace Blog.Controllers
                 ModelState.AddModelError(nameof(post.Image), upload.Error);
             }
 
-            if (ModelState.IsValid)
+            var tagsAreValid = TryNormalizeTags(tagValues, out var tags);
+
+            if (ModelState.IsValid && tagsAreValid && !await _context.Blogs.AnyAsync(blog => blog.Id == post.BlogId))
             {
-                try
+                ModelState.AddModelError(nameof(post.BlogId), "The selected blog does not exist.");
+            }
+
+            if (!ModelState.IsValid || !tagsAreValid)
+            {
+                SetEditViewData(post, tagValues);
+
+                return View(post);
+            }
+
+            var newSlug = _slugService.UrlFriendly(post.Title);
+            PostAlias reclaimedAlias = null;
+
+            if (newSlug != currentPost.Slug)
+            {
+                reclaimedAlias = await _context.PostAliases
+                    .FirstOrDefaultAsync(alias => alias.Slug == newSlug && alias.PostId == currentPost.Id);
+
+                if (reclaimedAlias == null && !_slugService.IsUnique(newSlug))
                 {
-                    currentPost.Title = post.Title;
-                    currentPost.Abstract = post.Abstract;
-                    currentPost.Content = post.Content;
-                    currentPost.Status = post.Status;
+                    ModelState.AddModelError("Title", "The title you provided cannot be used for a unique slug");
+                    SetEditViewData(post, tagValues);
 
-                    var newSlug = _slugService.UrlFriendly(post.Title);
+                    return View(post);
+                }
+            }
 
-                    if (newSlug != currentPost.Slug)
+            try
+            {
+                currentPost.BlogId = post.BlogId;
+                currentPost.Title = post.Title;
+                currentPost.Abstract = post.Abstract;
+                currentPost.Content = post.Content;
+                currentPost.Status = post.Status;
+
+                if (currentPost.Status == ReadyStatus.Production && currentPost.Published == null)
+                {
+                    currentPost.Published = DateTime.UtcNow;
+                }
+
+                if (newSlug != currentPost.Slug)
+                {
+                    if (reclaimedAlias != null)
                     {
-                        if (_slugService.IsUnique(newSlug))
-                        {
-                            currentPost.Title = post.Title;
-                            currentPost.Slug = newSlug;
-                        }
-                        else
-                        {
-                            ModelState.AddModelError("Title", "The title you provided cannot be used for a unique slug");
-                            ViewData["TagValues"] = string.Join(",", tagValues);
-
-                            return View(post);
-                        }
+                        _context.PostAliases.Remove(reclaimedAlias);
                     }
 
-                    if (upload.Data != null)
+                    if (!string.IsNullOrEmpty(currentPost.Slug)
+                        && !await _context.PostAliases.AnyAsync(alias => alias.Slug == currentPost.Slug))
                     {
-                        currentPost.ImageData = upload.Data;
-                        currentPost.ContentType = upload.ContentType;
-                    }
-
-                    // Clear any existing tags
-                    _context.Tags.RemoveRange(currentPost.Tags);
-
-                    // Add new tags
-                    foreach (var tagText in tagValues)
-                    {
-                        _context.Add(new Tag
+                        _context.PostAliases.Add(new PostAlias
                         {
-                            PostId = post.Id,
-                            AuthorId = currentPost.AuthorId,
-                            Text = tagText
+                            PostId = currentPost.Id,
+                            Slug = currentPost.Slug
                         });
                     }
 
-                    currentPost.Updated = DateTime.UtcNow;
-
-                    await _context.SaveChangesAsync();
+                    currentPost.Slug = newSlug;
                 }
-                catch (DbUpdateConcurrencyException)
+
+                if (upload.Data != null)
                 {
-                    if (!PostExists(post.Id))
-                    {
-                        return NotFound();
-                    }
-                    else
-                    {
-                        throw;
-                    }
+                    currentPost.ImageData = upload.Data;
+                    currentPost.ContentType = upload.ContentType;
                 }
 
-                return RedirectToAction(nameof(Index));
+                // Clear any existing tags
+                _context.Tags.RemoveRange(currentPost.Tags);
+
+                // Add new tags
+                foreach (var tagText in tags)
+                {
+                    _context.Add(new Tag
+                    {
+                        PostId = post.Id,
+                        AuthorId = currentPost.AuthorId,
+                        Text = tagText
+                    });
+                }
+
+                currentPost.Updated = DateTime.UtcNow;
+
+                await _context.SaveChangesAsync();
+            }
+            catch (DbUpdateConcurrencyException)
+            {
+                if (!PostExists(post.Id))
+                {
+                    return NotFound();
+                }
+                else
+                {
+                    throw;
+                }
             }
 
-            ViewData["TagValues"] = string.Join(",", tagValues);
-            ViewData["AuthorId"] = new SelectList(_context.Users, "Id", "Id", post.AuthorId);
-            ViewData["BlogId"] = new SelectList(_context.Blogs, "Id", "Description", post.BlogId);
-
-            return View(post);
+            return RedirectToAction(nameof(Index));
         }
 
         // GET: Posts/Delete/5
@@ -405,6 +453,80 @@ namespace Blog.Controllers
             await _context.SaveChangesAsync();
 
             return RedirectToAction(nameof(Index));
+        }
+
+        private bool TryNormalizeTags(IEnumerable<string> tagValues, out List<string> tags)
+        {
+            tags = new List<string>();
+            var seen = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            var lengthError = false;
+            var duplicateError = false;
+
+            foreach (var raw in tagValues ?? Enumerable.Empty<string>())
+            {
+                var text = (raw ?? string.Empty).Trim();
+
+                if (text.Length == 0)
+                {
+                    continue;
+                }
+
+                if (text.Length < 2 || text.Length > 25)
+                {
+                    lengthError = true;
+                }
+
+                if (!seen.Add(text))
+                {
+                    duplicateError = true;
+                    continue;
+                }
+
+                tags.Add(text);
+            }
+
+            if (lengthError)
+            {
+                ModelState.AddModelError(string.Empty, "Each tag must be between 2 and 25 characters.");
+            }
+
+            if (duplicateError)
+            {
+                ModelState.AddModelError(string.Empty, "Tags must be unique.");
+            }
+
+            return !lengthError && !duplicateError;
+        }
+
+        private void SetCreateViewData(Post post, IEnumerable<string> tagValues)
+        {
+            ViewData["TagValues"] = string.Join(",", tagValues ?? Enumerable.Empty<string>());
+            ViewData["BlogId"] = new SelectList(_context.Blogs, "Id", "Name", post.BlogId);
+        }
+
+        private void SetEditViewData(Post post, IEnumerable<string> tagValues)
+        {
+            ViewData["TagValues"] = string.Join(",", tagValues ?? Enumerable.Empty<string>());
+            ViewData["AuthorId"] = new SelectList(_context.Users, "Id", "Id", post.AuthorId);
+            ViewData["BlogId"] = new SelectList(_context.Blogs, "Id", "Name", post.BlogId);
+        }
+
+        private static IQueryable<Post> ProjectList(IQueryable<Post> posts)
+        {
+            return posts.Select(post => new Post
+            {
+                Id = post.Id,
+                BlogId = post.BlogId,
+                AuthorId = post.AuthorId,
+                Title = post.Title,
+                Abstract = post.Abstract,
+                Created = post.Created,
+                Updated = post.Updated,
+                Published = post.Published,
+                Status = post.Status,
+                Slug = post.Slug,
+                ContentType = post.ContentType
+            });
         }
 
         private bool CanManage(Post post)

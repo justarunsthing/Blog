@@ -474,6 +474,38 @@ header.masthead .post-heading .subheading {
     margin-bottom: 1.1rem;
 }
 
+.post-body pre {
+    margin: 0 0 1.25rem;
+    padding: 1rem 1.15rem;
+    overflow-x: auto;
+    background: #0d1117;
+    color: #e6edf3;
+    border-radius: 0.75rem;
+    border: 1px solid #30363d;
+}
+
+.post-body code {
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
+    font-size: 0.86em;
+}
+
+.post-body pre code {
+    display: block;
+    padding: 0;
+    background: transparent;
+    color: inherit;
+    font-size: 0.92rem;
+    line-height: 1.6;
+    white-space: pre;
+}
+
+.post-body :not(pre) > code {
+    padding: 0.12em 0.38em;
+    background: #efeae1;
+    border-radius: 0.3rem;
+    color: var(--ink);
+}
+
 .post-tags,
 .tag-cloud {
     display: flex;

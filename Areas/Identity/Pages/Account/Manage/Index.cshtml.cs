@@ -71,7 +71,7 @@ namespace Blog.Areas.Identity.Pages.Account.Manage
             var userName = await _userManager.GetUserNameAsync(user);
 
             Username = userName;
-            CurrentImage = _imageService.DecodeImage(user.ImageData, user.ContentType);
+            SetCurrentImage(user);
 
             Input = new InputModel();
         }
@@ -107,7 +107,7 @@ namespace Blog.Areas.Identity.Pages.Account.Manage
             if (!ModelState.IsValid)
             {
                 Username = await _userManager.GetUserNameAsync(user);
-                CurrentImage = _imageService.DecodeImage(user.ImageData, user.ContentType);
+                SetCurrentImage(user);
 
                 return Page();
             }
@@ -126,6 +126,20 @@ namespace Blog.Areas.Identity.Pages.Account.Manage
             StatusMessage = "Your profile has been updated";
 
             return RedirectToPage();
+        }
+
+        private void SetCurrentImage(BlogUser user)
+        {
+            if (string.IsNullOrWhiteSpace(user.ContentType) || user.ImageData == null || user.ImageData.Length == 0)
+            {
+                CurrentImage = null;
+                return;
+            }
+
+            var version = string.IsNullOrEmpty(user.ConcurrencyStamp)
+                ? string.Empty
+                : "?v=" + Uri.EscapeDataString(user.ConcurrencyStamp);
+            CurrentImage = "/media/users/" + user.Id + version;
         }
     }
 }

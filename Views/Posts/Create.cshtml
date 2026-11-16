@@ -82,10 +82,29 @@
 
     <script>
         // Default font size
+        var codeBlockButton = function (context) {
+            var ui = $.summernote.ui;
+            return ui.button({
+                contents: '<i class="fas fa-code"></i>',
+                tooltip: 'Code block',
+                click: function () {
+                    var selected = context.invoke('editor.getSelectedText');
+                    var text = selected && selected.length ? selected : 'code';
+                    var encoded = $('<div>').text(text).html();
+                    context.invoke('editor.pasteHTML', '<pre><code class="language-plaintext">' + encoded + '</code></pre><p><br></p>');
+                }
+            }).render();
+        };
+        var toolbar = $.extend(true, [], $.summernote.options.toolbar);
+        toolbar.push(['codeblock', ['codeBlock']]);
         $('#Content').summernote({
             placeholder: "Blog content",
             tabsize: 2,
-            height: 280
+            height: 280,
+            toolbar: toolbar,
+            buttons: {
+                codeBlock: codeBlockButton
+            }
         });
 
         var tagValues = '@ViewData["TagValues"]';
