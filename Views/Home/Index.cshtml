@@ -1,9 +1,11 @@
 ﻿@using Blog.Enums
+@using Blog.Services
 @using Blog.ViewModels
 @using Microsoft.AspNetCore.Identity
 @using X.PagedList
 @using X.PagedList.Mvc.Core
 @inject UserManager<BlogUser> userManager
+@inject SiteClock clock
 
 @model IPagedList<BlogCard>
 
@@ -46,7 +48,7 @@ else
                     }
                 </a>
                 <div class="story-card-body">
-                    <p class="story-meta">@blog.LatestPublished.ToString("dd MMM yyyy")@(blog.Author != null ? $" · {blog.Author.FullName}" : "")</p>
+                    <p class="story-meta">@clock.Format(blog.LatestPublished)@(blog.Author != null ? $" · {blog.Author.FullName}" : "")</p>
                     <h3>@blog.Name</h3>
                     <p class="card-text" title="@blog.Description">@blog.Description</p>
                     <div class="story-actions">

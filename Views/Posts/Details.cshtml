@@ -1,8 +1,10 @@
 ﻿@using Blog.Enums
+@using Blog.Services
 @using Blog.ViewModels
 @using Microsoft.AspNetCore.Identity
 @model PostDetailViewModel
 @inject UserManager<BlogUser> userManager
+@inject SiteClock clock
 
 <div class="post-layout">
     <article>
@@ -16,7 +18,7 @@
         }
         @if (Model.Post.Published is DateTime published)
         {
-            <p class="story-meta mb-3">@published.ToString("dd MMM yyyy")</p>
+            <p class="story-meta mb-3">@clock.Format(published)</p>
         }
         @if (!string.IsNullOrWhiteSpace(Model.Post.ContentType))
         {
@@ -101,11 +103,11 @@
                     <p class="story-meta">
                         @if (comment.Moderated != null)
                         {
-                            <span>Moderated (@comment.ModerationType.ToString().ToLower()) · @comment.Moderated?.ToString("dd MMM yyyy")</span>
+                            <span>Moderated (@comment.ModerationType.ToString().ToLower()) · @clock.Format(comment.Moderated.Value)</span>
                         }
                         else
                         {
-                            <span>@comment.Created.ToString("dd MMM yyyy")</span>
+                            <span>@clock.Format(comment.Created)</span>
                         }
                     </p>
                     @if (comment.Deleted != null || string.IsNullOrEmpty(comment.Body))

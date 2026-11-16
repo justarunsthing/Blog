@@ -92,9 +92,14 @@ public class DiscoveryMetadataTests
         Assert.Contains("Sitemap: http://blog.internal:8080/sitemap.xml", otherHost.Content, StringComparison.Ordinal);
     }
 
+    private static SiteClock TestClock()
+    {
+        return new SiteClock(Options.Create(new Blog.ViewModels.SiteSettings { TimeZone = "Europe/London" }));
+    }
+
     private static IActionResult RobotsFor(string scheme, string host)
     {
-        var controller = new DiscoveryController(null);
+        var controller = new DiscoveryController(null, TestClock());
         var http = new DefaultHttpContext();
         http.Request.Scheme = scheme;
         http.Request.Host = new HostString(host);
@@ -236,7 +241,7 @@ public class DiscoveryMetadataTests
 
         public DiscoveryController CreateDiscovery()
         {
-            var controller = new DiscoveryController(_context);
+            var controller = new DiscoveryController(_context, TestClock());
             AttachRequest(controller);
             return controller;
         }

@@ -64,6 +64,8 @@ builder.Services.AddScoped<SearchService>();
 
 // Register a pre-configured instance of MailSettings class
 builder.Services.Configure<MailSettings>(builder.Configuration.GetSection("MailSettings"));
+builder.Services.Configure<SiteSettings>(builder.Configuration.GetSection("Site"));
+builder.Services.AddSingleton<SiteClock>();
 
 builder.Services.Configure<BrevoSettings>(builder.Configuration.GetSection("Brevo"));
 builder.Services.AddHttpClient<IBlogEmailSender, EmailService>(client =>

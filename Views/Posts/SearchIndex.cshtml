@@ -1,8 +1,10 @@
-﻿@using Microsoft.AspNetCore.Identity
+﻿@using Blog.Services
+@using Microsoft.AspNetCore.Identity
 @using X.PagedList
 @using X.PagedList.Mvc.Core
 
 @inject UserManager<BlogUser> userManager
+@inject SiteClock clock
 @model IPagedList<Post>
 
 @{
@@ -33,7 +35,7 @@ else
                     }
                 </a>
                 <div class="story-card-body">
-                    <p class="story-meta">@((post.Published ?? post.Created).ToString("dd MMM yyyy"))</p>
+                    <p class="story-meta">@clock.Format(post.Published ?? post.Created)</p>
                     <h3>@post.Title</h3>
                     <p class="card-text">@post.Abstract</p>
                     <div class="story-actions">

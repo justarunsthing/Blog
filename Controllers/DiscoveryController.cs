@@ -14,10 +14,12 @@ namespace Blog.Controllers
         public const int FeedSize = 50;
 
         private readonly ApplicationDbContext _context;
+        private readonly SiteClock _clock;
 
-        public DiscoveryController(ApplicationDbContext context)
+        public DiscoveryController(ApplicationDbContext context, SiteClock clock)
         {
             _context = context;
+            _clock = clock;
         }
 
         [HttpGet("/feed")]
@@ -93,11 +95,11 @@ namespace Blog.Controllers
 
             foreach (var post in posts)
             {
-                var when = PublicUrl.AsUtc(post.Published ?? post.Created);
+                var when = post.Published ?? post.Created;
                 urlset.Add(UrlElement(
                     ns,
                     PublicUrl.ForPath(Request, "/BlogPosts/UrlFriendly/" + post.Slug),
-                    when.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture)));
+                    _clock.FormatDay(when)));
             }
 
             var document = new XDocument(new XDeclaration("1.0", "utf-8", null), urlset);
