@@ -77,7 +77,12 @@
     <a asp-action="Index">Back to posts</a>
 </div>
 
+@section Styles {
+    <link href="https://cdn.jsdelivr.net/npm/summernote@0.9.0/dist/summernote-lite.min.css" rel="stylesheet" />
+}
+
 @section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/summernote@0.9.0/dist/summernote-lite.min.js"></script>
     <script src="~/js/post-editor.js"></script>
     <script>
         let tagValues = '@ViewData["TagValues"]';

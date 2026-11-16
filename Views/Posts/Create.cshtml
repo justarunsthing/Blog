@@ -77,9 +77,14 @@
 </div>
 
 
+@section Styles {
+    <link href="https://cdn.jsdelivr.net/npm/summernote@0.9.0/dist/summernote-lite.min.css" rel="stylesheet" />
+}
+
 @section Scripts {
     @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
 
+    <script src="https://cdn.jsdelivr.net/npm/summernote@0.9.0/dist/summernote-lite.min.js"></script>
     <script src="~/js/post-editor.js"></script>
     <script>
         var tagValues = '@ViewData["TagValues"]';
