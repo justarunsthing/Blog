@@ -150,6 +150,22 @@ namespace Blog.Controllers
             ViewData["MainText"] = post.Title;
             ViewData["SubText"] = post.Abstract;
 
+            if (post.Status == ReadyStatus.Production)
+            {
+                var canonical = PublicUrl.ForPath(Request, "/BlogPosts/UrlFriendly/" + post.Slug);
+                ViewData["CanonicalUrl"] = canonical;
+                ViewData["MetaDescription"] = post.Abstract;
+                ViewData["OgTitle"] = post.Title;
+                ViewData["OgDescription"] = post.Abstract;
+                ViewData["OgUrl"] = canonical;
+                ViewData["OgType"] = "article";
+
+                if (!string.IsNullOrEmpty(post.ContentType))
+                {
+                    ViewData["OgImage"] = PublicUrl.ForPath(Request, $"/media/posts/{post.Id}");
+                }
+            }
+
             return View(viewModel);
         }
 

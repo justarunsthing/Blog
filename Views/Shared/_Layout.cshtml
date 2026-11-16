@@ -3,9 +3,6 @@
 <head>
 	<meta charset="utf-8" />
 	<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
-	<meta name="description" content="justarunsthing's Tech Blog" />
-	<meta name="author" content="justarunsthing" />
-
 	@{
 		const string titlePrefix = "justarunsthing's Tech Blog - ";
 		var pageTitle = ViewData["Title"]?.ToString()?.Trim();
@@ -14,7 +11,48 @@
 			: pageTitle.StartsWith(titlePrefix, StringComparison.Ordinal)
 				? pageTitle
 				: titlePrefix + pageTitle;
+
+		var metaDescription = ViewData["MetaDescription"] as string;
+		if (string.IsNullOrWhiteSpace(metaDescription))
+		{
+			metaDescription = "justarunsthing's Tech Blog";
+		}
+
+		var canonicalUrl = ViewData["CanonicalUrl"] as string;
+		var ogTitle = ViewData["OgTitle"] as string;
+		var ogDescription = ViewData["OgDescription"] as string;
+		var ogUrl = ViewData["OgUrl"] as string;
+		var ogType = ViewData["OgType"] as string;
+		var ogImage = ViewData["OgImage"] as string;
+		var feedUrl = $"{Context.Request.Scheme}://{Context.Request.Host}/feed";
 	}
+	<meta name="description" content="@metaDescription" />
+	<meta name="author" content="justarunsthing" />
+	@if (!string.IsNullOrEmpty(canonicalUrl))
+	{
+		<link rel="canonical" href="@canonicalUrl" />
+	}
+	@if (!string.IsNullOrEmpty(ogTitle))
+	{
+		<meta property="og:title" content="@ogTitle" />
+	}
+	@if (!string.IsNullOrEmpty(ogDescription))
+	{
+		<meta property="og:description" content="@ogDescription" />
+	}
+	@if (!string.IsNullOrEmpty(ogUrl))
+	{
+		<meta property="og:url" content="@ogUrl" />
+	}
+	@if (!string.IsNullOrEmpty(ogType))
+	{
+		<meta property="og:type" content="@ogType" />
+	}
+	@if (!string.IsNullOrEmpty(ogImage))
+	{
+		<meta property="og:image" content="@ogImage" />
+	}
+	<link rel="alternate" type="application/rss+xml" title="justarunsthing's Tech Blog" href="@feedUrl" />
 	<title>@documentTitle</title>
 	<link rel="icon" type="image/png" href="~/img/arunpun-favicon.png" />
 	<link rel="apple-touch-icon" href="~/img/arunpun-favicon.png" />
