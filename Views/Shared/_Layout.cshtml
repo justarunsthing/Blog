@@ -24,10 +24,15 @@
 		var ogUrl = ViewData["OgUrl"] as string;
 		var ogType = ViewData["OgType"] as string;
 		var ogImage = ViewData["OgImage"] as string;
+		var robots = ViewData["Robots"] as string;
 		var feedUrl = $"{Context.Request.Scheme}://{Context.Request.Host}/feed";
 	}
 	<meta name="description" content="@metaDescription" />
 	<meta name="author" content="justarunsthing" />
+	@if (!string.IsNullOrEmpty(robots))
+	{
+		<meta name="robots" content="@robots" />
+	}
 	@if (!string.IsNullOrEmpty(canonicalUrl))
 	{
 		<link rel="canonical" href="@canonicalUrl" />

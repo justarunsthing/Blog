@@ -165,6 +165,10 @@ namespace Blog.Controllers
                     ViewData["OgImage"] = PublicUrl.ForPath(Request, $"/media/posts/{post.Id}");
                 }
             }
+            else
+            {
+                ViewData["Robots"] = "noindex";
+            }
 
             return View(viewModel);
         }

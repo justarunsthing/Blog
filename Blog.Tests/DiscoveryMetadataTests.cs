@@ -143,6 +143,7 @@ public class DiscoveryMetadataTests
         Assert.Equal("A short abstract", production.ViewData["MetaDescription"]);
         Assert.Equal("article", production.ViewData["OgType"]);
         Assert.Equal($"https://example.com/media/posts/{covered.PostId}", production.ViewData["OgImage"]);
+        Assert.Null(production.ViewData["Robots"]);
 
         var plain = Assert.IsType<ViewResult>(await database.CreatePostsController().Details("plain-note"));
         Assert.Equal("https://example.com/BlogPosts/UrlFriendly/plain-note", plain.ViewData["CanonicalUrl"]);
@@ -157,6 +158,7 @@ public class DiscoveryMetadataTests
         Assert.Null(preview.ViewData["OgType"]);
         Assert.Null(preview.ViewData["OgImage"]);
         Assert.Null(preview.ViewData["MetaDescription"]);
+        Assert.Equal("noindex", preview.ViewData["Robots"]);
     }
 
     private sealed class TestDatabase : IAsyncDisposable
