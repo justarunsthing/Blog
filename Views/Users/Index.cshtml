@@ -1,4 +1,6 @@
+@using Blog.Services
 @model IEnumerable<global::Blog.Controllers.UsersController.UserRow>
+@inject SiteClock clock
 @{
     ViewData["Title"] = "Users";
     ViewData["MainText"] = "Users";
@@ -28,7 +30,7 @@
                     <td>@row.User.FullName</td>
                     <td>@row.User.Email</td>
                     <td>@(row.User.EmailConfirmed ? "Yes" : "No")</td>
-                    <td>@(row.Locked ? row.User.LockoutEnd?.UtcDateTime.ToString("dd MMM yyyy HH:mm") + " UTC" : "No")</td>
+                    <td>@(row.Locked && row.User.LockoutEnd != null ? clock.FormatTime(row.User.LockoutEnd.Value.UtcDateTime) : "No")</td>
                     <td>@(row.User.Disabled ? "Yes" : "No")</td>
                     <td>@(row.Roles.Any() ? string.Join(", ", row.Roles) : "User")</td>
                     <td>

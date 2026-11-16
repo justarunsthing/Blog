@@ -5,7 +5,6 @@ using X.PagedList.EF;
 using Blog.ViewModels;
 using Blog.Interfaces;
 using Blog.Services;
-using System.Diagnostics;
 using System.Net;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -114,7 +113,18 @@ namespace Blog.Controllers
         [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
         public IActionResult Error()
         {
-            return View(new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier });
+            Response.StatusCode = StatusCodes.Status500InternalServerError;
+            return View();
+        }
+
+        [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
+        public IActionResult StatusCodePage(int code)
+        {
+            var status = code is >= 400 and <= 599 ? code : StatusCodes.Status404NotFound;
+            Response.StatusCode = status;
+            return status == StatusCodes.Status404NotFound
+                ? View("NotFound")
+                : View("Error");
         }
     }
 }

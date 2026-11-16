@@ -13,10 +13,42 @@
         <p>
             <strong>Deleting this data will permanently remove your account, and this cannot be recovered.</strong>
         </p>
-        <a id="delete" asp-page="DeletePersonalData" class="btn btn-danger btn-lg w-100 my-3">Delete Account</a>
+        <button type="button" id="delete" class="btn btn-danger btn-lg w-100 my-3">Delete personal data</button>
     </div>
 </div>
 
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
+    <script>
+        document.getElementById('delete').addEventListener('click', function () {
+            @if (Model.IsOnlyAdministrator)
+            {
+                <text>
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'This account stays',
+                    text: 'This is the only administrator. Deleting it would leave nobody who can publish or moderate.',
+                    confirmButtonText: 'Close'
+                });
+                </text>
+            }
+            else
+            {
+                <text>
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Delete this account?',
+                    text: 'Deleting this data permanently removes the account, and it cannot be recovered.',
+                    showCancelButton: true,
+                    confirmButtonText: 'Continue',
+                    cancelButtonText: 'Cancel'
+                }).then(function (result) {
+                    if (result.isConfirmed) {
+                        window.location.href = '@Url.Page("DeletePersonalData")';
+                    }
+                });
+                </text>
+            }
+        });
+    </script>
 }

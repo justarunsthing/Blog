@@ -1,0 +1,11 @@
+@{
+    ViewData["Title"] = "Page not found";
+    ViewData["MainText"] = "Page not found";
+    ViewData["SubText"] = "That address does not match a page on this site.";
+    ViewData["Robots"] = "noindex";
+}
+
+<div class="panel">
+    <p>The page is missing, or it is no longer published.</p>
+    <a class="btn btn-primary" asp-controller="Home" asp-action="Index">Back home</a>
+</div>

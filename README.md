@@ -7,11 +7,13 @@ Public discovery: `/feed` is the RSS feed of Production posts, `/sitemap.xml` li
 ## What you can do
 
 - Read blogs and posts. The home page lists blogs that have at least one Production post, five per page.
-- Open a post by its slug at `/BlogPosts/UrlFriendly/{slug}`. Production and Preview open for anyone with the link. Incomplete returns Not Found unless the signed-in user is the author or an administrator.
+- Open a post by its slug at `/BlogPosts/UrlFriendly/{slug}`. Production and Preview open for anyone with the link. Incomplete returns Not Found unless the signed-in user is the author or an administrator. A missing page uses the site layout and sends `noindex`.
 - Search Production posts by title, abstract, or body.
 - Create a blog, with a name, description, and image. The create page requires the Administrator role.
-- Write a post with an abstract, body, tags, an image, and a status of Incomplete, Preview, or Production.
-- Comment on a post.
+- Write a post with an abstract, body, tags, an image, and a status of Incomplete, Preview, or Production. Preview and Incomplete posts send `noindex`. Production posts do not.
+- Comment on a post. A new comment emails `MailSettings:Mail`. Comments inside a 10-minute window send one message. If sending fails, that wait is cleared and the comment is still saved.
+- Sign in, register, reset a password, and manage an account. Those Identity pages send `noindex`. `robots.txt` still allows the rest of the site.
+- Delete your own account from Personal data. The only administrator account cannot be deleted. The Delete personal data button warns before anything is removed.
 - Moderate a comment. Moderation stores a revised body, a reason, the time, and the signed-in user. Reasons include offensive language, hate speech, threatening speech, and the other values on `ModerationType`.
 - Send a message from the contact page. Mail goes out through the Brevo HTTP API.
 
@@ -40,7 +42,9 @@ dotnet user-secrets set "Seed:Password" "YOUR_PASSWORD"
 
 `Services/DataService.cs` creates every `BlogRole` (Administrator and Moderator) when the roles table is empty. When the users table is empty, it creates one user with the configured email and password, hardcodes the first name Arun and the last name Pun, marks the email confirmed, and adds that user to Administrator and Moderator.
 
-Mail is Brevo. `EmailService` posts JSON to `https://api.brevo.com/v3/smtp/email` with the `api-key` header. Set `Brevo:ApiKey` (`Brevo__ApiKey` in the environment). Do not put the key in `appsettings.json`. The from address and the sender name are `MailSettings:Mail` and `MailSettings:DisplayName`.
+Mail is Brevo. `EmailService` posts JSON to `https://api.brevo.com/v3/smtp/email` with the `api-key` header. Set `Brevo:ApiKey` (`Brevo__ApiKey` in the environment). Do not put the key in `appsettings.json`. The from address and the sender name are `MailSettings:Mail` and `MailSettings:DisplayName`. Comment notifications go to that same address.
+
+Dates are stored in UTC and shown in `Site:TimeZone`. The default is `Europe/London` (`Site__TimeZone` on Render). In winter that matches UTC. During British Summer Time, a time just before midnight UTC is the next calendar day in London.
 
 ```bash
 dotnet user-secrets set "Brevo:ApiKey" "YOUR_BREVO_API_KEY"

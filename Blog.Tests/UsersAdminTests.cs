@@ -3,11 +3,14 @@ using Blog.Controllers;
 using Blog.Data;
 using Blog.Interfaces;
 using Blog.Models;
+using Blog.Services;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.AspNetCore.Mvc.ViewFeatures;
+using Blog.Areas.Identity.Pages.Account.Manage;
 using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging.Abstractions;
@@ -52,6 +55,57 @@ public class UsersAdminTests
         Assert.True(storedReader.Disabled);
         Assert.NotEqual(stamp, storedReader.SecurityStamp);
         Assert.Equal("Disabled reader@example.com.", controller.TempData["UserMessage"]);
+    }
+
+    [Fact]
+    public async Task IsOnlyAdministrator_IsTrueOnlyForTheSoleAdministrator()
+    {
+        await using var database = new UserDatabase();
+        var users = CreateUserManager(database.Context);
+        var roles = CreateRoleManager(database.Context);
+        await roles.CreateAsync(new IdentityRole("Administrator"));
+
+        var admin = await AddUserAsync(users, "admin@example.com");
+        var reader = await AddUserAsync(users, "reader@example.com");
+        await users.AddToRoleAsync(admin, "Administrator");
+
+        Assert.True(await AdministratorGuard.IsOnlyAdministratorAsync(users, admin));
+        Assert.False(await AdministratorGuard.IsOnlyAdministratorAsync(users, reader));
+
+        var otherAdmin = await AddUserAsync(users, "other-admin@example.com");
+        await users.AddToRoleAsync(otherAdmin, "Administrator");
+
+        Assert.False(await AdministratorGuard.IsOnlyAdministratorAsync(users, admin));
+        Assert.False(await AdministratorGuard.IsOnlyAdministratorAsync(users, otherAdmin));
+    }
+
+    [Fact]
+    public async Task DeletePersonalData_RefusesTheOnlyAdministrator()
+    {
+        await using var database = new UserDatabase();
+        var users = CreateUserManager(database.Context);
+        var roles = CreateRoleManager(database.Context);
+        await roles.CreateAsync(new IdentityRole("Administrator"));
+        var admin = await AddUserAsync(users, "admin@example.com");
+        await users.AddToRoleAsync(admin, "Administrator");
+
+        var http = new DefaultHttpContext
+        {
+            User = new ClaimsPrincipal(new ClaimsIdentity(new[]
+            {
+                new Claim(ClaimTypes.NameIdentifier, admin.Id)
+            }, "test"))
+        };
+        var page = new DeletePersonalDataModel(users, null, NullLogger<DeletePersonalDataModel>.Instance)
+        {
+            PageContext = new PageContext { HttpContext = http }
+        };
+
+        var result = await page.OnPostAsync();
+
+        Assert.IsType<PageResult>(result);
+        Assert.True(page.IsOnlyAdministrator);
+        Assert.NotNull(await users.FindByIdAsync(admin.Id));
     }
 
     [Fact]

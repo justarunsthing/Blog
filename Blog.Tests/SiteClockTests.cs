@@ -13,6 +13,7 @@ public class SiteClockTests
         var utcEvening = new DateTime(2026, 7, 1, 23, 30, 0, DateTimeKind.Utc);
 
         Assert.Equal("02 Jul 2026", clock.Format(utcEvening));
+        Assert.Equal("02 Jul 2026 00:30", clock.FormatTime(utcEvening));
         Assert.Equal("2026-07-02", clock.FormatDay(utcEvening));
     }
 }

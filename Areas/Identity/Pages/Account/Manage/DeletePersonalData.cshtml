@@ -7,6 +7,15 @@
 
 <h3>@ViewData["Title"]</h3>
 
+@if (Model.IsOnlyAdministrator)
+{
+    <div class="alert alert-warning" role="alert">
+        <p><strong>This is the only administrator account, so it cannot be deleted.</strong></p>
+        <p>Deleting it would leave nobody who can publish or moderate.</p>
+    </div>
+}
+else
+{
 <div class="alert alert-warning" role="alert">
     <p>
         <strong>Deleting this data will permanently remove your account, and this cannot be recovered.</strong>
@@ -27,6 +36,7 @@
         <button class="w-100 btn btn-lg btn-danger mb-3" type="submit">Delete data & close my account</button>
     </form>
 </div>
+}
 
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />

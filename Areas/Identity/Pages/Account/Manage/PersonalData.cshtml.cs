@@ -1,8 +1,8 @@
 ﻿// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
-using System;
 using System.Threading.Tasks;
 using Blog.Models;
+using Blog.Services;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
@@ -23,6 +23,8 @@ namespace Blog.Areas.Identity.Pages.Account.Manage
             _logger = logger;
         }
 
+        public bool IsOnlyAdministrator { get; private set; }
+
         public async Task<IActionResult> OnGet()
         {
             var user = await _userManager.GetUserAsync(User);
@@ -31,6 +33,7 @@ namespace Blog.Areas.Identity.Pages.Account.Manage
                 return NotFound($"Unable to load user with ID '{_userManager.GetUserId(User)}'.");
             }
 
+            IsOnlyAdministrator = await AdministratorGuard.IsOnlyAdministratorAsync(_userManager, user);
             return Page();
         }
     }
