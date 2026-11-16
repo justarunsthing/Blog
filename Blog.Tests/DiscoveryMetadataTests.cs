@@ -79,6 +79,33 @@ public class DiscoveryMetadataTests
     }
 
     [Fact]
+    public void Robots_points_crawlers_at_the_request_host_sitemap_without_a_database()
+    {
+        var content = Assert.IsType<ContentResult>(RobotsFor("https", "example.com"));
+        Assert.Contains("text/plain", content.ContentType, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("User-agent: *", content.Content, StringComparison.Ordinal);
+        Assert.Contains("Allow: /", content.Content, StringComparison.Ordinal);
+        Assert.Contains("Sitemap: https://example.com/sitemap.xml", content.Content, StringComparison.Ordinal);
+        Assert.DoesNotContain("Disallow", content.Content, StringComparison.OrdinalIgnoreCase);
+
+        var otherHost = Assert.IsType<ContentResult>(RobotsFor("http", "blog.internal:8080"));
+        Assert.Contains("Sitemap: http://blog.internal:8080/sitemap.xml", otherHost.Content, StringComparison.Ordinal);
+    }
+
+    private static IActionResult RobotsFor(string scheme, string host)
+    {
+        var controller = new DiscoveryController(null);
+        var http = new DefaultHttpContext();
+        http.Request.Scheme = scheme;
+        http.Request.Host = new HostString(host);
+        controller.ControllerContext = new ControllerContext
+        {
+            HttpContext = http
+        };
+        return controller.Robots();
+    }
+
+    [Fact]
     public async Task Details_sets_canonical_and_open_graph_for_production_only()
     {
         await using var database = new TestDatabase();

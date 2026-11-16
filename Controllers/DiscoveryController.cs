@@ -105,6 +105,18 @@ namespace Blog.Controllers
             return Content(ToXml(document), "application/xml; charset=utf-8");
         }
 
+        [HttpGet("/robots.txt")]
+        public IActionResult Robots()
+        {
+            var body = string.Join("\n",
+                "User-agent: *",
+                "Allow: /",
+                "",
+                "Sitemap: " + PublicUrl.ForPath(Request, "/sitemap.xml"));
+
+            return Content(body + "\n", "text/plain; charset=utf-8");
+        }
+
         private static XElement UrlElement(XNamespace ns, string loc, string lastmod)
         {
             var url = new XElement(ns + "url", new XElement(ns + "loc", loc));

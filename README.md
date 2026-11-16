@@ -2,6 +2,8 @@
 
 An ASP.NET Core MVC blog. A blog is a subject. Posts live inside a blog. A post stays off the home page, the blog list, and search until it is Production.
 
+Public discovery: `/feed` is the RSS feed of Production posts, `/sitemap.xml` lists the home page, public blogs, and Production posts, and `/robots.txt` points crawlers at the sitemap. Absolute URLs use the request host, so production emits the Render host.
+
 ## What you can do
 
 - Read blogs and posts. The home page lists blogs that have at least one Production post, five per page.

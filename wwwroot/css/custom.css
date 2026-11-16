@@ -719,6 +719,17 @@ textarea.form-control {
     overflow: hidden;
 }
 
+.note-toolbar .note-code-language-label {
+    display: inline-block;
+    min-width: 4.75rem;
+    margin-left: 0.15rem;
+    font-family: Consolas, "Courier New", monospace;
+    font-size: 0.8rem;
+    text-align: left;
+    text-transform: none;
+    letter-spacing: 0;
+}
+
 .note-editable,
 .note-placeholder {
     font-family: Lora, Georgia, serif;
