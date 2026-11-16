@@ -11,6 +11,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
+using Microsoft.AspNetCore.Mvc.Routing;
 using Microsoft.AspNetCore.Mvc.ViewFeatures;
 using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
@@ -142,14 +143,122 @@ public class ContactRateLimitTests
         Assert.Equal(1, await database.Context.MailSends.CountAsync(send => send.Purpose == MailCooldown.EmailConfirmation));
     }
 
-    private static ResendEmailConfirmationModel CreateResendPage(UserManager<BlogUser> users, RecordingSender sender, MailCooldown cooldown, string remoteIp)
+    [Fact]
+    public async Task ResendConfirmation_ReleasesTheCooldownWhenSendingFails()
+    {
+        await using var database = new MailDatabase();
+        var users = CreateTokenUserManager(database.Context);
+        var created = await users.CreateAsync(new BlogUser
+        {
+            UserName = "ada@example.com",
+            Email = "ada@example.com",
+            FirstName = "Ada",
+            LastName = "Lovelace"
+        }, "Password1!");
+        Assert.True(created.Succeeded, string.Join(" ", created.Errors.Select(error => error.Description)));
+
+        var sender = new ThrowingAccountSender();
+        var cooldown = new MailCooldown(database.Context);
+        var first = CreateAccountPage(users, sender, cooldown, "203.0.113.8");
+        var second = CreateAccountPage(users, sender, cooldown, "203.0.113.8");
+
+        var firstResult = await first.OnPostAsync();
+        var secondResult = await second.OnPostAsync();
+
+        Assert.IsType<PageResult>(firstResult);
+        Assert.IsType<PageResult>(secondResult);
+        Assert.Contains("The message could not be sent. Please try again.", Errors(first));
+        Assert.Contains("The message could not be sent. Please try again.", Errors(second));
+        Assert.DoesNotContain(Errors(second), message => message.Contains("Please wait"));
+        Assert.Equal(2, sender.Attempts);
+        Assert.Equal(0, await database.Context.MailSends.CountAsync());
+    }
+
+    [Fact]
+    public async Task ForgotPassword_ReleasesTheCooldownWhenSendingFails()
+    {
+        await using var database = new MailDatabase();
+        var users = CreateTokenUserManager(database.Context);
+        var created = await users.CreateAsync(new BlogUser
+        {
+            UserName = "ada@example.com",
+            Email = "ada@example.com",
+            FirstName = "Ada",
+            LastName = "Lovelace",
+            EmailConfirmed = true
+        }, "Password1!");
+        Assert.True(created.Succeeded, string.Join(" ", created.Errors.Select(error => error.Description)));
+
+        var sender = new ThrowingAccountSender();
+        var cooldown = new MailCooldown(database.Context);
+        var http = new DefaultHttpContext();
+        http.Connection.RemoteIpAddress = IPAddress.Parse("203.0.113.8");
+        http.Request.Scheme = "https";
+        var first = new ForgotPasswordModel(users, sender, cooldown, NullLogger<ForgotPasswordModel>.Instance)
+        {
+            PageContext = new PageContext { HttpContext = http },
+            Url = new StubUrlHelper(),
+            Input = new ForgotPasswordModel.InputModel { Email = "ada@example.com" }
+        };
+        var second = new ForgotPasswordModel(users, sender, cooldown, NullLogger<ForgotPasswordModel>.Instance)
+        {
+            PageContext = new PageContext { HttpContext = http },
+            Url = new StubUrlHelper(),
+            Input = new ForgotPasswordModel.InputModel { Email = "ada@example.com" }
+        };
+
+        var firstResult = await first.OnPostAsync();
+        var secondResult = await second.OnPostAsync();
+
+        Assert.IsType<PageResult>(firstResult);
+        Assert.IsType<PageResult>(secondResult);
+        Assert.DoesNotContain(Errors(second), message => message.Contains("Please wait"));
+        Assert.Equal(2, sender.Attempts);
+        Assert.Equal(0, await database.Context.MailSends.CountAsync(send => send.Purpose == MailCooldown.PasswordReset));
+    }
+
+    private static ResendEmailConfirmationModel CreateAccountPage(UserManager<BlogUser> users, IBlogEmailSender sender, MailCooldown cooldown, string remoteIp)
+    {
+        var page = CreateResendPage(users, sender, cooldown, remoteIp);
+        page.Url = new StubUrlHelper();
+        page.Input = new ResendEmailConfirmationModel.InputModel { Email = "ada@example.com" };
+        return page;
+    }
+
+    private static ResendEmailConfirmationModel CreateResendPage(UserManager<BlogUser> users, IBlogEmailSender sender, MailCooldown cooldown, string remoteIp)
     {
         var httpContext = new DefaultHttpContext();
         httpContext.Connection.RemoteIpAddress = IPAddress.Parse(remoteIp);
-        return new ResendEmailConfirmationModel(users, sender, cooldown)
+        return new ResendEmailConfirmationModel(users, sender, cooldown, NullLogger<ResendEmailConfirmationModel>.Instance)
         {
             PageContext = new PageContext { HttpContext = httpContext }
         };
+    }
+
+    private static UserManager<BlogUser> CreateTokenUserManager(ApplicationDbContext context)
+    {
+        return new TokenUserManager(context);
+    }
+
+    private sealed class TokenUserManager : UserManager<BlogUser>
+    {
+        public TokenUserManager(ApplicationDbContext context)
+            : base(
+                new UserStore<BlogUser>(context),
+                Microsoft.Extensions.Options.Options.Create(new IdentityOptions()),
+                new PasswordHasher<BlogUser>(),
+                new List<IUserValidator<BlogUser>> { new UserValidator<BlogUser>() },
+                new List<IPasswordValidator<BlogUser>> { new PasswordValidator<BlogUser>() },
+                new UpperInvariantLookupNormalizer(),
+                new IdentityErrorDescriber(),
+                null,
+                NullLogger<UserManager<BlogUser>>.Instance)
+        {
+        }
+
+        public override Task<string> GenerateEmailConfirmationTokenAsync(BlogUser user) => Task.FromResult("token");
+
+        public override Task<string> GeneratePasswordResetTokenAsync(BlogUser user) => Task.FromResult("token");
     }
 
     private static UserManager<BlogUser> CreateUserManager(ApplicationDbContext context)
@@ -216,6 +325,47 @@ public class ContactRateLimitTests
             ConfirmationSends++;
             return Task.CompletedTask;
         }
+    }
+
+    private sealed class ThrowingAccountSender : IBlogEmailSender
+    {
+        public int Attempts { get; private set; }
+
+        public Task SendContactEmailAsync(string email, string subject, string name, string htmlMessage)
+        {
+            return Task.CompletedTask;
+        }
+
+        public Task SendEmailAsync(string email, string subject, string htmlMessage)
+        {
+            Attempts++;
+            throw new InvalidOperationException("Brevo rejected the message.");
+        }
+    }
+
+    private sealed class StubUrlHelper : IUrlHelper
+    {
+        public StubUrlHelper()
+        {
+            var http = new DefaultHttpContext();
+            http.Request.Scheme = "https";
+            http.Request.Host = new HostString("example.com");
+            ActionContext = new ActionContext(http, new Microsoft.AspNetCore.Routing.RouteData(), new Microsoft.AspNetCore.Mvc.Abstractions.ActionDescriptor());
+        }
+
+        public ActionContext ActionContext { get; }
+
+        public string Action(UrlActionContext actionContext) => "https://example.com/account";
+
+        public string Content(string contentPath) => contentPath;
+
+        public bool IsLocalUrl(string url) => true;
+
+        public string Link(string routeName, object values) => "https://example.com/account";
+
+        public string RouteUrl(UrlRouteContext routeContext) => "https://example.com/account";
+
+        public string Page(string pageName, string pageHandler, object values, string protocol, string host, string fragment) => "https://example.com/account";
     }
 
     private sealed class ThrowingSender : IBlogEmailSender

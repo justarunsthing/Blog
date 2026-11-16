@@ -186,8 +186,18 @@ namespace Blog.Areas.Identity.Pages.Account
                         values: new { area = "Identity", userId = userId, code = code, returnUrl = returnUrl },
                         protocol: Request.Scheme);
 
-                    await _emailSender.SendEmailAsync(Input.Email, "Confirm your email",
-                        $"Please confirm your account by <a href='{HtmlEncoder.Default.Encode(callbackUrl)}'>clicking here</a>.");
+                    try
+                    {
+                        await _emailSender.SendEmailAsync(Input.Email, "Confirm your email",
+                            $"Please confirm your account by <a href='{HtmlEncoder.Default.Encode(callbackUrl)}'>clicking here</a>.");
+                    }
+                    catch (Exception exception)
+                    {
+                        _logger.LogError(exception, "Registration confirmation mail could not be sent.");
+                        await _mailCooldown.ReleaseAsync(MailCooldown.Registration, Input.Email, remoteIp);
+                        ModelState.AddModelError(string.Empty, "The account was created, but the confirmation email could not be sent. Request another confirmation email.");
+                        return Page();
+                    }
 
                     if (_userManager.Options.SignIn.RequireConfirmedAccount)
                     {

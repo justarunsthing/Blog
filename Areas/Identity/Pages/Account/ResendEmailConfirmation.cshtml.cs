@@ -16,6 +16,7 @@ using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.AspNetCore.WebUtilities;
 using Blog.Interfaces;
 using Blog.Services;
+using Microsoft.Extensions.Logging;
 
 namespace Blog.Areas.Identity.Pages.Account
 {
@@ -25,12 +26,14 @@ namespace Blog.Areas.Identity.Pages.Account
         private readonly UserManager<BlogUser> _userManager;
         private readonly IBlogEmailSender _emailSender;
         private readonly MailCooldown _mailCooldown;
+        private readonly ILogger<ResendEmailConfirmationModel> _logger;
 
-        public ResendEmailConfirmationModel(UserManager<BlogUser> userManager, IBlogEmailSender emailSender, MailCooldown mailCooldown)
+        public ResendEmailConfirmationModel(UserManager<BlogUser> userManager, IBlogEmailSender emailSender, MailCooldown mailCooldown, ILogger<ResendEmailConfirmationModel> logger)
         {
             _userManager = userManager;
             _emailSender = emailSender;
             _mailCooldown = mailCooldown;
+            _logger = logger;
         }
 
         /// <summary>
@@ -88,10 +91,20 @@ namespace Blog.Areas.Identity.Pages.Account
                 pageHandler: null,
                 values: new { userId = userId, code = code },
                 protocol: Request.Scheme);
-            await _emailSender.SendEmailAsync(
-                Input.Email,
-                "Confirm your email",
-                $"Please confirm your account by <a href='{HtmlEncoder.Default.Encode(callbackUrl)}'>clicking here</a>.");
+            try
+            {
+                await _emailSender.SendEmailAsync(
+                    Input.Email,
+                    "Confirm your email",
+                    $"Please confirm your account by <a href='{HtmlEncoder.Default.Encode(callbackUrl)}'>clicking here</a>.");
+            }
+            catch (Exception exception)
+            {
+                _logger.LogError(exception, "Confirmation mail could not be sent.");
+                await _mailCooldown.ReleaseAsync(MailCooldown.EmailConfirmation, Input.Email, remoteIp);
+                ModelState.AddModelError(string.Empty, "The message could not be sent. Please try again.");
+                return Page();
+            }
 
             ModelState.AddModelError(string.Empty, "Verification email sent. Please check your email.");
             return Page();

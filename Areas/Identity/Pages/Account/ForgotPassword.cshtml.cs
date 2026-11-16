@@ -16,6 +16,7 @@ using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.AspNetCore.WebUtilities;
 using Blog.Interfaces;
 using Blog.Services;
+using Microsoft.Extensions.Logging;
 
 namespace Blog.Areas.Identity.Pages.Account
 {
@@ -24,12 +25,14 @@ namespace Blog.Areas.Identity.Pages.Account
         private readonly UserManager<BlogUser> _userManager;
         private readonly IBlogEmailSender _emailSender;
         private readonly MailCooldown _mailCooldown;
+        private readonly ILogger<ForgotPasswordModel> _logger;
 
-        public ForgotPasswordModel(UserManager<BlogUser> userManager, IBlogEmailSender emailSender, MailCooldown mailCooldown)
+        public ForgotPasswordModel(UserManager<BlogUser> userManager, IBlogEmailSender emailSender, MailCooldown mailCooldown, ILogger<ForgotPasswordModel> logger)
         {
             _userManager = userManager;
             _emailSender = emailSender;
             _mailCooldown = mailCooldown;
+            _logger = logger;
         }
 
         /// <summary>
@@ -85,10 +88,20 @@ namespace Blog.Areas.Identity.Pages.Account
                     values: new { area = "Identity", code },
                     protocol: Request.Scheme);
 
-                await _emailSender.SendEmailAsync(
-                    Input.Email,
-                    "Reset Password",
-                    $"Please reset your password by <a href='{HtmlEncoder.Default.Encode(callbackUrl)}'>clicking here</a>.");
+                try
+                {
+                    await _emailSender.SendEmailAsync(
+                        Input.Email,
+                        "Reset Password",
+                        $"Please reset your password by <a href='{HtmlEncoder.Default.Encode(callbackUrl)}'>clicking here</a>.");
+                }
+                catch (Exception exception)
+                {
+                    _logger.LogError(exception, "Password reset mail could not be sent.");
+                    await _mailCooldown.ReleaseAsync(MailCooldown.PasswordReset, Input.Email, remoteIp);
+                    ModelState.AddModelError(string.Empty, "The message could not be sent. Please try again.");
+                    return Page();
+                }
 
                 return RedirectToPage("./ForgotPasswordConfirmation");
             }
