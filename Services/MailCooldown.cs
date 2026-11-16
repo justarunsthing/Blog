@@ -8,6 +8,7 @@ namespace Blog.Services
     public class MailCooldown(ApplicationDbContext context)
     {
         public const string Contact = "Contact";
+        public const string Comment = "Comment";
         public const string Registration = "Registration";
         public const string PasswordReset = "PasswordReset";
         public const string EmailConfirmation = "EmailConfirmation";

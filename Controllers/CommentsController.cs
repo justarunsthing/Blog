@@ -1,15 +1,16 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
+﻿using System.Net;
+using Blog.Data;
+using Blog.Enums;
+using Blog.Interfaces;
+using Blog.Models;
+using Blog.Services;
+using Blog.ViewModels;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
-using Blog.Data;
-using Blog.Enums;
-using Blog.Models;
-using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Identity;
+using Microsoft.Extensions.Options;
 
 namespace Blog.Controllers
 {
@@ -17,11 +18,25 @@ namespace Blog.Controllers
     {
         private readonly ApplicationDbContext _context;
         private readonly UserManager<BlogUser> _userManager;
+        private readonly IBlogEmailSender _emailSender;
+        private readonly MailCooldown _mailCooldown;
+        private readonly MailSettings _mailSettings;
+        private readonly ILogger<CommentsController> _logger;
 
-        public CommentsController(ApplicationDbContext context, UserManager<BlogUser> userManager)
+        public CommentsController(
+            ApplicationDbContext context,
+            UserManager<BlogUser> userManager,
+            IBlogEmailSender emailSender,
+            MailCooldown mailCooldown,
+            IOptions<MailSettings> mailSettings,
+            ILogger<CommentsController> logger)
         {
             _context = context;
             _userManager = userManager;
+            _emailSender = emailSender;
+            _mailCooldown = mailCooldown;
+            _mailSettings = mailSettings.Value;
+            _logger = logger;
         }
 
         // GET: Comments
@@ -65,6 +80,7 @@ namespace Blog.Controllers
             _context.Add(comment);
 
             await _context.SaveChangesAsync();
+            await NotifyAdminAsync(post, comment);
 
             return RedirectToAction("Details", "Posts", new { slug = post.Slug }, "comment-section");
         }
@@ -241,6 +257,39 @@ namespace Blog.Controllers
             await _context.SaveChangesAsync();
 
             return RedirectToAction("Details", "Posts", new { slug }, "comment-section");
+        }
+
+        private async Task NotifyAdminAsync(Post post, Comment comment)
+        {
+            if (string.IsNullOrWhiteSpace(_mailSettings.Mail))
+            {
+                return;
+            }
+
+            var remoteIp = HttpContext.Connection.RemoteIpAddress?.ToString();
+
+            if (!await _mailCooldown.TryBeginAsync(MailCooldown.Comment, _mailSettings.Mail, remoteIp, MailCooldown.ContactWindow))
+            {
+                return;
+            }
+
+            try
+            {
+                var author = await _userManager.FindByIdAsync(comment.AuthorId);
+                var name = WebUtility.HtmlEncode(string.IsNullOrWhiteSpace(author?.FullName) ? "A reader" : author.FullName);
+                var email = WebUtility.HtmlEncode(author?.Email ?? string.Empty);
+                var title = WebUtility.HtmlEncode(post.Title);
+                var body = WebUtility.HtmlEncode(comment.Body);
+                var link = PublicUrl.ForPath(Request, "/BlogPosts/UrlFriendly/" + post.Slug);
+                var html = $"{name} ({email}) commented on <b>{title}</b>.<br/><br/>{body}<br/><br/><a href=\"{WebUtility.HtmlEncode(link)}\">{WebUtility.HtmlEncode(link)}</a>";
+
+                await _emailSender.SendEmailAsync(_mailSettings.Mail, "New comment on " + post.Title, html);
+            }
+            catch (Exception exception)
+            {
+                _logger.LogError(exception, "Comment notification could not be sent.");
+                await _mailCooldown.ReleaseAsync(MailCooldown.Comment, _mailSettings.Mail, remoteIp);
+            }
         }
 
         private bool CanRead(Post post)
