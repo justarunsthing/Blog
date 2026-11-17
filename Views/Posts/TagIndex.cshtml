@@ -27,7 +27,7 @@ else
                 <a class="story-card-media" asp-action="Details" asp-route-slug="@post.Slug">
                     @if (!string.IsNullOrWhiteSpace(post.ContentType))
                     {
-                        <img src="/media/posts/@post.Id?v=@((post.Updated ?? post.Created).Ticks)" alt="" />
+                        <img src="/media/posts/@post.Id?v=@((post.Updated ?? post.Created).Ticks)" alt="@post.Title" />
                     }
                 </a>
                 <div class="story-card-body">

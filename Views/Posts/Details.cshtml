@@ -22,7 +22,7 @@
         }
         @if (!string.IsNullOrWhiteSpace(Model.Post.ContentType))
         {
-            <img class="post-cover" src="/media/posts/@Model.Post.Id?v=@((Model.Post.Updated ?? Model.Post.Created).Ticks)" alt="" />
+            <img class="post-cover" src="/media/posts/@Model.Post.Id?v=@((Model.Post.Updated ?? Model.Post.Created).Ticks)" alt="@Model.Post.Title" />
         }
         <div class="post-body">
             @Html.Raw(Model.Post.Content)
