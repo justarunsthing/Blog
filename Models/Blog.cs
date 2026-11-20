@@ -24,6 +24,9 @@ namespace Blog.Models
         [Display(Name = "Updated On")]
         public DateTime? Updated { get; set; }
 
+        [Display(Name = "Reading order")]
+        public int Position { get; set; }
+
         [Display(Name = "Blog Image")]
         public byte[] ImageData { get; set; }
 

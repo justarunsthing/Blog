@@ -52,6 +52,9 @@ namespace Blog.Data.Migrations
                         .HasMaxLength(100)
                         .HasColumnType("character varying(100)");
 
+                    b.Property<int>("Position")
+                        .HasColumnType("integer");
+
                     b.Property<DateTime?>("Updated")
                         .HasColumnType("timestamp with time zone");
 
@@ -265,6 +268,9 @@ namespace Blog.Data.Migrations
 
                     b.Property<byte[]>("ImageData")
                         .HasColumnType("bytea");
+
+                    b.Property<int>("Position")
+                        .HasColumnType("integer");
 
                     b.Property<DateTime?>("Published")
                         .HasColumnType("timestamp with time zone");

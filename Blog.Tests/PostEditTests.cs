@@ -14,6 +14,7 @@ using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.Options;
+using X.PagedList;
 
 namespace Blog.Tests;
 
@@ -256,15 +257,15 @@ public class PostEditTests
     }
 
     [Fact]
-    public async Task Home_orders_blogs_by_the_newest_published_post()
+    public async Task Home_orders_blogs_by_reading_position()
     {
         await using var database = new PostDatabase();
         var olderBlog = await database.AddBlogAsync("Older blog");
         var newerBlog = await database.AddBlogAsync("Newer blog");
         var oldPost = await database.AddPostAsync(olderBlog.Id, "Old post", "old-post", ReadyStatus.Production);
         var newPost = await database.AddPostAsync(newerBlog.Id, "New post", "new-post", ReadyStatus.Production);
-        olderBlog.Created = new DateTime(2026, 1, 1, 0, 0, 0, DateTimeKind.Utc);
-        newerBlog.Created = new DateTime(2020, 1, 1, 0, 0, 0, DateTimeKind.Utc);
+        olderBlog.Position = 2;
+        newerBlog.Position = 1;
         oldPost.Created = new DateTime(2026, 3, 1, 0, 0, 0, DateTimeKind.Utc);
         oldPost.Published = new DateTime(2020, 1, 1, 0, 0, 0, DateTimeKind.Utc);
         newPost.Created = new DateTime(2024, 1, 1, 0, 0, 0, DateTimeKind.Utc);
@@ -283,6 +284,25 @@ public class PostEditTests
         var blogs = Assert.IsAssignableFrom<IEnumerable<BlogCard>>(view.Model).ToList();
         Assert.Equal(new[] { "Newer blog", "Older blog" }, blogs.Select(blog => blog.Name).ToArray());
         Assert.Equal(new DateTime(2025, 6, 1), blogs[0].LatestPublished.Date);
+    }
+
+    [Fact]
+    public async Task BlogPostIndex_orders_posts_by_reading_position()
+    {
+        await using var database = new PostDatabase();
+        var notes = await database.AddBlogAsync("Notes");
+        var second = await database.AddPostAsync(notes.Id, "Hosting", "hosting", ReadyStatus.Production);
+        var first = await database.AddPostAsync(notes.Id, "How I built this blog", "how-i-built-this", ReadyStatus.Production);
+        second.Position = 2;
+        second.Published = new DateTime(2026, 8, 1, 0, 0, 0, DateTimeKind.Utc);
+        first.Position = 1;
+        first.Published = new DateTime(2026, 1, 1, 0, 0, 0, DateTimeKind.Utc);
+        await database.Context.SaveChangesAsync();
+
+        var result = await database.CreateController().BlogPostIndex(notes.Id, 1);
+
+        var posts = Assert.IsAssignableFrom<IPagedList<Post>>(Assert.IsType<ViewResult>(result).Model);
+        Assert.Equal(new[] { "How I built this blog", "Hosting" }, posts.Select(post => post.Title).ToArray());
     }
 
     [Fact]
@@ -313,7 +333,8 @@ public class PostEditTests
             Title = title,
             Abstract = post.Abstract,
             Content = post.Content,
-            Status = post.Status
+            Status = post.Status,
+            Position = post.Position < 1 ? 1 : post.Position
         };
     }
 

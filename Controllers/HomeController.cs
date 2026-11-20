@@ -33,9 +33,8 @@ namespace Blog.Controllers
             var blogs = _context.Blogs
                 .AsNoTracking()
                 .Where(b => b.Posts.Any(p => p.Status == ReadyStatus.Production))
-                .OrderByDescending(b => b.Posts
-                    .Where(p => p.Status == ReadyStatus.Production)
-                    .Max(p => p.Published ?? p.Created))
+                .OrderBy(b => b.Position)
+                .ThenBy(b => b.Id)
                 .Select(b => new BlogCard
                 {
                     Id = b.Id,

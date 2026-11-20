@@ -35,6 +35,9 @@ namespace Blog.Models
         [Display(Name = "Published On")]
         public DateTime? Published { get; set; }
 
+        [Display(Name = "Reading order")]
+        public int Position { get; set; }
+
         public ReadyStatus Status { get; set; }
         public string Slug { get; set; }
         public byte[] ImageData { get; set; }

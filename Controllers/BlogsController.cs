@@ -33,7 +33,8 @@ namespace Blog.Controllers
             var blogs = _context.Blogs
                 .AsNoTracking()
                 .Where(b => b.Posts.Any(p => p.Status == ReadyStatus.Production))
-                .OrderByDescending(b => b.Created)
+                .OrderBy(b => b.Position)
+                .ThenBy(b => b.Id)
                 .Select(b => new Blog.Models.Blog
                 {
                     Id = b.Id,
@@ -42,7 +43,8 @@ namespace Blog.Controllers
                     Description = b.Description,
                     Created = b.Created,
                     Updated = b.Updated,
-                    ContentType = b.ContentType
+                    ContentType = b.ContentType,
+                    Position = b.Position
                 });
 
             return View(await blogs.ToListAsync());
@@ -81,7 +83,7 @@ namespace Blog.Controllers
         [HttpPost]
         [Authorize(Roles = "Administrator")]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("Name,Description,Image")] Blog.Models.Blog blog)
+        public async Task<IActionResult> Create([Bind("Name,Description,Image,Position")] Blog.Models.Blog blog)
         {
             var upload = await _imageService.ReadUploadAsync(blog.Image);
 
@@ -96,6 +98,10 @@ namespace Blog.Controllers
                 blog.AuthorId = _userManager.GetUserId(User);
                 blog.ImageData = upload.Data;
                 blog.ContentType = upload.ContentType;
+                if (blog.Position < 1)
+                {
+                    blog.Position = (await _context.Blogs.MaxAsync(item => (int?)item.Position) ?? 0) + 1;
+                }
 
                 _context.Add(blog);
                 await _context.SaveChangesAsync();
@@ -133,7 +139,7 @@ namespace Blog.Controllers
         [HttpPost]
         [Authorize(Roles = "Administrator")]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, [Bind("Id,Name,Description")] Blog.Models.Blog blog, IFormFile newImage)
+        public async Task<IActionResult> Edit(int id, [Bind("Id,Name,Description,Position")] Blog.Models.Blog blog, IFormFile newImage)
         {
             if (id != blog.Id)
             {
@@ -145,6 +151,11 @@ namespace Blog.Controllers
             if (!upload.IsAllowed)
             {
                 ModelState.AddModelError(nameof(blog.Image), upload.Error);
+            }
+
+            if (blog.Position < 1)
+            {
+                ModelState.AddModelError(nameof(blog.Position), "Reading order starts at 1.");
             }
 
             if (ModelState.IsValid)
@@ -162,6 +173,8 @@ namespace Blog.Controllers
                     {
                         currentBlog.Description = blog.Description;
                     }
+
+                    currentBlog.Position = blog.Position;
 
                     if (upload.Data != null)
                     {

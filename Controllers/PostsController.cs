@@ -64,7 +64,8 @@ namespace Blog.Controllers
             var posts = ProjectList(_context.Posts
                 .AsNoTracking()
                 .Where(p => p.BlogId == id && p.Status == ReadyStatus.Production)
-                .OrderByDescending(p => p.Published ?? p.Created));
+                .OrderBy(p => p.Position)
+                .ThenBy(p => p.Id));
 
             return View(await posts.ToPagedListAsync(pageNumber, pageSize));
         }
@@ -189,7 +190,7 @@ namespace Blog.Controllers
         [HttpPost]
         [Authorize(Roles = "Administrator")]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("BlogId,Title,Abstract,Content,Status,Image")] Post post, List<string> tagValues)
+        public async Task<IActionResult> Create([Bind("BlogId,Title,Abstract,Content,Status,Image,Position")] Post post, List<string> tagValues)
         {
             var upload = await _imageService.ReadUploadAsync(post.Image);
 
@@ -231,6 +232,12 @@ namespace Blog.Controllers
                 post.ImageData = upload.Data;
                 post.ContentType = upload.ContentType;
                 post.Created = DateTime.UtcNow;
+                if (post.Position < 1)
+                {
+                    post.Position = (await _context.Posts
+                        .Where(item => item.BlogId == post.BlogId)
+                        .MaxAsync(item => (int?)item.Position) ?? 0) + 1;
+                }
 
                 if (post.Status == ReadyStatus.Production && post.Published == null)
                 {
@@ -294,7 +301,7 @@ namespace Blog.Controllers
         [HttpPost]
         [Authorize]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, [Bind("Id,BlogId,Title,Abstract,Content,Status")] Post post, IFormFile newImage, List<string> tagValues)
+        public async Task<IActionResult> Edit(int id, [Bind("Id,BlogId,Title,Abstract,Content,Status,Position")] Post post, IFormFile newImage, List<string> tagValues)
         {
             if (id != post.Id)
             {
@@ -318,6 +325,11 @@ namespace Blog.Controllers
             if (!upload.IsAllowed)
             {
                 ModelState.AddModelError(nameof(post.Image), upload.Error);
+            }
+
+            if (post.Position < 1)
+            {
+                ModelState.AddModelError(nameof(post.Position), "Reading order starts at 1.");
             }
 
             var tagsAreValid = TryNormalizeTags(tagValues, out var tags);
@@ -358,6 +370,7 @@ namespace Blog.Controllers
                 currentPost.Abstract = post.Abstract;
                 currentPost.Content = post.Content;
                 currentPost.Status = post.Status;
+                currentPost.Position = post.Position;
 
                 if (currentPost.Status == ReadyStatus.Production && currentPost.Published == null)
                 {
@@ -543,6 +556,7 @@ namespace Blog.Controllers
                 Created = post.Created,
                 Updated = post.Updated,
                 Published = post.Published,
+                Position = post.Position,
                 Status = post.Status,
                 Slug = post.Slug,
                 ContentType = post.ContentType
