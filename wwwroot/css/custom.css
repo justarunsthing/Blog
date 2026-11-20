@@ -436,6 +436,59 @@ header.masthead .post-heading .subheading {
     grid-template-columns: minmax(0, 46rem);
 }
 
+.post-blog {
+    margin: 0 0 0.85rem;
+    font-size: 0.92rem;
+}
+
+.post-blog a {
+    color: var(--copper);
+    font-weight: 600;
+    text-decoration: none;
+}
+
+.post-blog a:hover {
+    color: var(--copper-bright);
+}
+
+.post-series {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+    margin-top: 2.25rem;
+}
+
+.post-series a {
+    display: block;
+    padding: 0.9rem 1rem;
+    background: var(--paper-raised);
+    border: 1px solid var(--line);
+    border-radius: 0.9rem;
+    color: var(--ink);
+    text-decoration: none;
+}
+
+.post-series a:hover {
+    border-color: var(--copper);
+    color: var(--copper);
+}
+
+.post-series a span {
+    display: block;
+    margin-bottom: 0.25rem;
+    font-family: "Open Sans", "Helvetica Neue", Helvetica, Arial, sans-serif;
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--ink-soft);
+}
+
+.post-series-next {
+    grid-column: 2;
+    text-align: right;
+}
+
 .post-status {
     margin: 0 0 1.25rem;
     padding: 0.9rem 1.1rem;
@@ -891,8 +944,14 @@ footer.site-footer > .container {
 
 @media (max-width: 767px) {
     .post-layout,
-    .about-grid {
+    .about-grid,
+    .post-series {
         grid-template-columns: 1fr;
+    }
+
+    .post-series-next {
+        grid-column: auto;
+        text-align: left;
     }
 
     .post-aside {

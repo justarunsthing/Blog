@@ -140,12 +140,22 @@ namespace Blog.Controllers
             var viewModel = new PostDetailViewModel
             {
                 Post = post,
+                BlogName = await _context.Blogs
+                    .AsNoTracking()
+                    .Where(blog => blog.Id == post.BlogId)
+                    .Select(blog => blog.Name)
+                    .FirstOrDefaultAsync(),
                 Tags = await _context.Tags
                         .Where(t => t.Post.Status == ReadyStatus.Production)
                         .Select(t => t.Text.ToLower())
                         .Distinct()
                         .ToListAsync()
             };
+
+            if (post.Status == ReadyStatus.Production)
+            {
+                (viewModel.Previous, viewModel.Next) = await ReadingOrderNeighborsAsync(post);
+            }
 
             ViewData["Title"] = post.Title;
             ViewData["MainText"] = post.Title;
@@ -172,6 +182,29 @@ namespace Blog.Controllers
             }
 
             return View(viewModel);
+        }
+
+        private async Task<(PostNeighbor Previous, PostNeighbor Next)> ReadingOrderNeighborsAsync(Post post)
+        {
+            var series = _context.Posts
+                .AsNoTracking()
+                .Where(item => item.BlogId == post.BlogId && item.Status == ReadyStatus.Production && item.Id != post.Id);
+
+            var previous = await series
+                .Where(item => item.Position < post.Position || (item.Position == post.Position && item.Id < post.Id))
+                .OrderByDescending(item => item.Position)
+                .ThenByDescending(item => item.Id)
+                .Select(item => new PostNeighbor { Title = item.Title, Slug = item.Slug })
+                .FirstOrDefaultAsync();
+
+            var next = await series
+                .Where(item => item.Position > post.Position || (item.Position == post.Position && item.Id > post.Id))
+                .OrderBy(item => item.Position)
+                .ThenBy(item => item.Id)
+                .Select(item => new PostNeighbor { Title = item.Title, Slug = item.Slug })
+                .FirstOrDefaultAsync();
+
+            return (previous, next);
         }
 
         // GET: Posts/Create

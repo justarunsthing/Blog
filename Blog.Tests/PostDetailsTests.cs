@@ -85,6 +85,58 @@ public class PostDetailsTests
         Assert.IsType<ViewResult>(administratorResult);
     }
 
+    [Fact]
+    public async Task Details_links_a_production_post_to_its_blog_in_reading_order()
+    {
+        await using var database = new TestDatabase();
+        var blogId = await database.AddPostAsync("advanced", ReadyStatus.Production, "author", position: 3, title: "Advanced");
+        await database.AddPostAsync("draft-middle", ReadyStatus.Preview, "author", blogId: blogId, position: 2, title: "Still drafting");
+        await database.AddPostAsync("basics", ReadyStatus.Production, "author", blogId: blogId, position: 1, title: "Basics");
+        await database.AddPostAsync("other-blog", ReadyStatus.Production, "author", position: 2, title: "Somewhere else");
+
+        var result = await database.CreateController().Details("advanced");
+
+        var model = Assert.IsType<PostDetailViewModel>(Assert.IsType<ViewResult>(result).Model);
+        Assert.Equal("Notes", model.BlogName);
+        Assert.Equal("basics", model.Previous.Slug);
+        Assert.Equal("Basics", model.Previous.Title);
+        Assert.Null(model.Next);
+
+        var first = Assert.IsType<PostDetailViewModel>(Assert.IsType<ViewResult>(await database.CreateController().Details("basics")).Model);
+        Assert.Null(first.Previous);
+        Assert.Equal("advanced", first.Next.Slug);
+        Assert.Equal("Advanced", first.Next.Title);
+    }
+
+    [Fact]
+    public async Task Details_keeps_equal_positions_in_id_order()
+    {
+        await using var database = new TestDatabase();
+        var blogId = await database.AddPostAsync("first", ReadyStatus.Production, "author", position: 1, title: "First");
+        await database.AddPostAsync("second", ReadyStatus.Production, "author", blogId: blogId, position: 1, title: "Second");
+
+        var result = await database.CreateController().Details("second");
+
+        var model = Assert.IsType<PostDetailViewModel>(Assert.IsType<ViewResult>(result).Model);
+        Assert.Equal("first", model.Previous.Slug);
+        Assert.Null(model.Next);
+    }
+
+    [Fact]
+    public async Task Details_names_the_blog_on_a_preview_without_series_links()
+    {
+        await using var database = new TestDatabase();
+        var blogId = await database.AddPostAsync("basics", ReadyStatus.Production, "author", position: 1, title: "Basics");
+        await database.AddPostAsync("draft", ReadyStatus.Preview, "author", blogId: blogId, position: 2, title: "Still drafting");
+
+        var result = await database.CreateController().Details("draft");
+
+        var model = Assert.IsType<PostDetailViewModel>(Assert.IsType<ViewResult>(result).Model);
+        Assert.Equal("Notes", model.BlogName);
+        Assert.Null(model.Previous);
+        Assert.Null(model.Next);
+    }
+
     private sealed class TestDatabase : IAsyncDisposable
     {
         private readonly SqliteConnection _connection;
@@ -101,7 +153,7 @@ public class PostDetailsTests
             _context.Database.EnsureCreated();
         }
 
-        public async Task AddPostAsync(string slug, ReadyStatus status, string authorId, string tag = null)
+        public async Task<int> AddPostAsync(string slug, ReadyStatus status, string authorId, string tag = null, int? blogId = null, int position = 0, string title = null)
         {
             if (!await _context.Users.AnyAsync(user => user.Id == authorId))
             {
@@ -118,28 +170,37 @@ public class PostDetailsTests
                 });
             }
 
-            var blog = new Blog.Models.Blog
+            Blog.Models.Blog blog;
+            if (blogId is int existingBlogId)
             {
-                Name = "Notes",
-                Description = "Notes on the work",
-                Created = DateTime.UtcNow,
-                AuthorId = authorId,
-                ImageData = new byte[] { 1 },
-                ContentType = "image/png"
-            };
-            _context.Blogs.Add(blog);
-            await _context.SaveChangesAsync();
+                blog = await _context.Blogs.FirstAsync(item => item.Id == existingBlogId);
+            }
+            else
+            {
+                blog = new Blog.Models.Blog
+                {
+                    Name = "Notes",
+                    Description = "Notes on the work",
+                    Created = DateTime.UtcNow,
+                    AuthorId = authorId,
+                    ImageData = new byte[] { 1 },
+                    ContentType = "image/png"
+                };
+                _context.Blogs.Add(blog);
+                await _context.SaveChangesAsync();
+            }
 
             var post = new Post
             {
                 BlogId = blog.Id,
                 AuthorId = authorId,
-                Title = slug,
+                Title = title ?? slug,
                 Abstract = "A short abstract",
                 Content = "The post body",
                 Created = DateTime.UtcNow,
                 Status = status,
                 Slug = slug,
+                Position = position,
                 ImageData = new byte[] { 1 },
                 ContentType = "image/png"
             };
@@ -156,6 +217,8 @@ public class PostDetailsTests
                 });
                 await _context.SaveChangesAsync();
             }
+
+            return blog.Id;
         }
 
         public PostsController CreateController(string userId = null, string role = null)

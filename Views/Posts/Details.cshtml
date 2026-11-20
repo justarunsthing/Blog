@@ -8,6 +8,12 @@
 
 <div class="post-layout">
     <article>
+        @if (!string.IsNullOrWhiteSpace(Model.BlogName))
+        {
+            <p class="post-blog">
+                <a asp-action="BlogPostIndex" asp-route-id="@Model.Post.BlogId">@Model.BlogName</a>
+            </p>
+        }
         @if (Model.Post.Status == ReadyStatus.Preview)
         {
             <p class="post-status">Preview. This post is not listed. Anyone with this link can read it.</p>
@@ -39,6 +45,25 @@
                     <a class="tag-chip" asp-action="TagIndex" asp-route-tag="@tag.Text.ToLower()">#@tag.Text</a>
                 }
             </div>
+        }
+        @if (Model.Previous != null || Model.Next != null)
+        {
+            <nav class="post-series" aria-label="Posts in this blog">
+                @if (Model.Previous != null)
+                {
+                    <a class="post-series-previous" asp-action="Details" asp-route-slug="@Model.Previous.Slug">
+                        <span>Previous</span>
+                        @Model.Previous.Title
+                    </a>
+                }
+                @if (Model.Next != null)
+                {
+                    <a class="post-series-next" asp-action="Details" asp-route-slug="@Model.Next.Slug">
+                        <span>Next</span>
+                        @Model.Next.Title
+                    </a>
+                }
+            </nav>
         }
     </article>
     @if (Model.Tags.Any())
