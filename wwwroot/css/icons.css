@@ -1,0 +1,16 @@
+/* The four Font Awesome Free 6.3.0 icons this site uses. Icons: CC BY 4.0. */
+.fas,
+.fab {
+    display: inline-block;
+    width: 1em;
+    height: 1em;
+    vertical-align: -0.125em;
+    background-color: currentColor;
+    -webkit-mask: var(--icon) center / contain no-repeat;
+    mask: var(--icon) center / contain no-repeat;
+}
+
+.fa-bars { --icon: url("../icons/bars.svg"); }
+.fa-code { --icon: url("../icons/code.svg"); }
+.fa-github { --icon: url("../icons/github.svg"); }
+.fa-instagram { --icon: url("../icons/instagram.svg"); }
