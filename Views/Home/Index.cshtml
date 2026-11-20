@@ -44,7 +44,7 @@ else
                 <a class="story-card-media" asp-controller="Posts" asp-action="BlogPostIndex" asp-route-id="@blog.Id">
                     @if (!string.IsNullOrWhiteSpace(blog.ContentType))
                     {
-                        <img src="/media/blogs/@blog.Id?v=@((blog.Updated ?? blog.Created).Ticks)" alt="" />
+                        <img src="/media/blogs/@blog.Id?v=@((blog.Updated ?? blog.Created).Ticks)" alt="@blog.Name" />
                     }
                 </a>
                 <div class="story-card-body">

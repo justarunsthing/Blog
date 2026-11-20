@@ -69,7 +69,7 @@ else
         <td>
             @if (!string.IsNullOrWhiteSpace(item.ContentType))
             {
-                <img class="img-fluid" width="200px" src="/media/blogs/@item.Id?v=@((item.Updated ?? item.Created).Ticks)" alt="" />
+                <img class="img-fluid" width="200px" src="/media/blogs/@item.Id?v=@((item.Updated ?? item.Created).Ticks)" alt="@item.Name" />
             }
         </td>
         <td>
