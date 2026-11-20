@@ -41,9 +41,9 @@ public class DiscoveryMetadataTests
 
         var items = channel.Elements("item").ToList();
         Assert.Equal(2, items.Count);
-        Assert.Equal("https://example.com/BlogPosts/UrlFriendly/newer-note", items[0].Element("link").Value);
+        Assert.Equal("https://example.com/BlogPosts/newer-note", items[0].Element("link").Value);
         Assert.Equal("Mon, 01 Jun 2026 08:00:00 GMT", items[0].Element("pubDate").Value);
-        Assert.Equal("https://example.com/BlogPosts/UrlFriendly/ship-note", items[1].Element("link").Value);
+        Assert.Equal("https://example.com/BlogPosts/ship-note", items[1].Element("link").Value);
         Assert.Equal("Ship & tell", items[1].Element("title").Value);
         Assert.Equal("A & B <note>", items[1].Element("description").Value);
         Assert.Equal("Fri, 02 Jan 2026 03:04:05 GMT", items[1].Element("pubDate").Value);
@@ -69,7 +69,7 @@ public class DiscoveryMetadataTests
         var locs = document.Descendants(ns + "loc").Select(node => node.Value).ToList();
         Assert.Contains("https://example.com/", locs);
         Assert.Contains($"https://example.com/Posts/BlogPostIndex/{production.BlogId}", locs);
-        Assert.Contains("https://example.com/BlogPosts/UrlFriendly/ship-note", locs);
+        Assert.Contains("https://example.com/BlogPosts/ship-note", locs);
         Assert.DoesNotContain(locs, loc => loc.Contains("preview-note", StringComparison.Ordinal));
         Assert.DoesNotContain(locs, loc => loc.Contains("draft-note", StringComparison.Ordinal));
         Assert.DoesNotContain(locs, loc => loc.Contains($"/Posts/BlogPostIndex/{preview.BlogId}", StringComparison.Ordinal));
@@ -141,8 +141,8 @@ public class DiscoveryMetadataTests
             "image/png");
 
         var production = Assert.IsType<ViewResult>(await database.CreatePostsController().Details("ship-note"));
-        Assert.Equal("https://example.com/BlogPosts/UrlFriendly/ship-note", production.ViewData["CanonicalUrl"]);
-        Assert.Equal("https://example.com/BlogPosts/UrlFriendly/ship-note", production.ViewData["OgUrl"]);
+        Assert.Equal("https://example.com/BlogPosts/ship-note", production.ViewData["CanonicalUrl"]);
+        Assert.Equal("https://example.com/BlogPosts/ship-note", production.ViewData["OgUrl"]);
         Assert.Equal("Ship note", production.ViewData["OgTitle"]);
         Assert.Equal("A short abstract", production.ViewData["OgDescription"]);
         Assert.Equal("A short abstract", production.ViewData["MetaDescription"]);
@@ -151,7 +151,7 @@ public class DiscoveryMetadataTests
         Assert.Null(production.ViewData["Robots"]);
 
         var plain = Assert.IsType<ViewResult>(await database.CreatePostsController().Details("plain-note"));
-        Assert.Equal("https://example.com/BlogPosts/UrlFriendly/plain-note", plain.ViewData["CanonicalUrl"]);
+        Assert.Equal("https://example.com/BlogPosts/plain-note", plain.ViewData["CanonicalUrl"]);
         Assert.Equal("article", plain.ViewData["OgType"]);
         Assert.Null(plain.ViewData["OgImage"]);
 

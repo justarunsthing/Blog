@@ -7,7 +7,7 @@ Public discovery: `/feed` is the RSS feed of Production posts, `/sitemap.xml` li
 ## What you can do
 
 - Read blogs and posts. The home page lists blogs that have at least one Production post, five per page.
-- Open a post by its slug at `/BlogPosts/UrlFriendly/{slug}`. Production and Preview open for anyone with the link. Incomplete returns Not Found unless the signed-in user is the author or an administrator. A missing page uses the site layout and sends `noindex`.
+- Open a post by its slug at `/BlogPosts/{slug}`. Older `/BlogPosts/UrlFriendly/{slug}` addresses redirect there. Production and Preview open for anyone with the link. Incomplete returns Not Found unless the signed-in user is the author or an administrator. A missing page uses the site layout and sends `noindex`.
 - Search Production posts by title, abstract, or body.
 - Create a blog, with a name, description, and image. The create page requires the Administrator role.
 - Write a post with an abstract, body, tags, an image, and a status of Incomplete, Preview, or Production. Preview and Incomplete posts send `noindex`. Production posts do not.

@@ -11,6 +11,11 @@ namespace Blog.Services
             return $"{request.Scheme}://{request.Host}/";
         }
 
+        public static string ForPost(string slug)
+        {
+            return "/BlogPosts/" + slug;
+        }
+
         public static string ForPath(HttpRequest request, string path)
         {
             if (string.IsNullOrEmpty(path) || path == "/")

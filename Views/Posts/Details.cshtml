@@ -79,7 +79,7 @@
     }
     else
     {
-        <a class="btn btn-dark mt-3" asp-area="Identity" asp-page="/Account/Login" asp-route-returnUrl="@($"/BlogPosts/UrlFriendly/{Model.Post.Slug}#comment-section")">
+        <a class="btn btn-dark mt-3" asp-area="Identity" asp-page="/Account/Login" asp-route-returnUrl="@($"{PublicUrl.ForPost(Model.Post.Slug)}#comment-section")">
             Login to add a comment
         </a>
     }

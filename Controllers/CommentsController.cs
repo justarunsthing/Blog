@@ -280,7 +280,7 @@ namespace Blog.Controllers
                 var email = WebUtility.HtmlEncode(author?.Email ?? string.Empty);
                 var title = WebUtility.HtmlEncode(post.Title);
                 var body = WebUtility.HtmlEncode(comment.Body);
-                var link = PublicUrl.ForPath(Request, "/BlogPosts/UrlFriendly/" + post.Slug);
+                var link = PublicUrl.ForPath(Request, PublicUrl.ForPost(post.Slug));
                 var html = $"{name} ({email}) commented on <b>{title}</b>.<br/><br/>{body}<br/><br/><a href=\"{WebUtility.HtmlEncode(link)}\">{WebUtility.HtmlEncode(link)}</a>";
 
                 await _emailSender.SendEmailAsync(_mailSettings.Mail, "New comment on " + post.Title, html);

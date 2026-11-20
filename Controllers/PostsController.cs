@@ -128,7 +128,7 @@ namespace Blog.Controllers
                     return NotFound();
                 }
 
-                return new RedirectResult($"/BlogPosts/UrlFriendly/{alias.Post.Slug}", permanent: true);
+                return new RedirectResult(PublicUrl.ForPost(alias.Post.Slug), permanent: true);
             }
 
             if (!CanRead(post))
@@ -152,7 +152,7 @@ namespace Blog.Controllers
 
             if (post.Status == ReadyStatus.Production)
             {
-                var canonical = PublicUrl.ForPath(Request, "/BlogPosts/UrlFriendly/" + post.Slug);
+                var canonical = PublicUrl.ForPath(Request, PublicUrl.ForPost(post.Slug));
                 ViewData["CanonicalUrl"] = canonical;
                 ViewData["MetaDescription"] = post.Abstract;
                 ViewData["OgTitle"] = post.Title;

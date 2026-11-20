@@ -138,7 +138,7 @@ public class PostEditTests
         var oldSlug = await database.CreateController().Details("old-title");
         var redirect = Assert.IsType<RedirectResult>(oldSlug);
         Assert.True(redirect.Permanent);
-        Assert.Equal("/BlogPosts/UrlFriendly/new-title", redirect.Url);
+        Assert.Equal("/BlogPosts/new-title", redirect.Url);
 
         var current = await database.CreateController().Details("new-title");
         var view = Assert.IsType<ViewResult>(current);
@@ -300,7 +300,7 @@ public class PostEditTests
         Assert.Equal("old-title", Assert.IsType<PostDetailViewModel>(current.Model).Post.Slug);
         var redirect = Assert.IsType<RedirectResult>(await database.CreateController().Details("new-title"));
         Assert.True(redirect.Permanent);
-        Assert.Equal("/BlogPosts/UrlFriendly/old-title", redirect.Url);
+        Assert.Equal("/BlogPosts/old-title", redirect.Url);
         Assert.Equal(new[] { "new-title" }, await database.Context.PostAliases.Select(alias => alias.Slug).ToListAsync());
     }
 

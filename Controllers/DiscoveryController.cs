@@ -50,7 +50,7 @@ namespace Blog.Controllers
                 var when = PublicUrl.AsUtc(post.Published ?? post.Created);
                 channel.Add(new XElement("item",
                     new XElement("title", post.Title),
-                    new XElement("link", PublicUrl.ForPath(Request, "/BlogPosts/UrlFriendly/" + post.Slug)),
+                    new XElement("link", PublicUrl.ForPath(Request, PublicUrl.ForPost(post.Slug))),
                     new XElement("description", post.Abstract ?? string.Empty),
                     new XElement("pubDate", when.ToString("R", CultureInfo.InvariantCulture))));
             }
@@ -98,7 +98,7 @@ namespace Blog.Controllers
                 var when = post.Published ?? post.Created;
                 urlset.Add(UrlElement(
                     ns,
-                    PublicUrl.ForPath(Request, "/BlogPosts/UrlFriendly/" + post.Slug),
+                    PublicUrl.ForPath(Request, PublicUrl.ForPost(post.Slug)),
                     _clock.FormatDay(when)));
             }
 

@@ -145,10 +145,14 @@ app.UseAuthorization();
 
 app.MapStaticAssets();
 
+app.MapGet("/BlogPosts/UrlFriendly/{slug}", (string slug) =>
+    Results.Redirect(PublicUrl.ForPost(slug), permanent: true));
+
 app.MapControllerRoute(
     name: "SlugRoute",
-    pattern: "BlogPosts/UrlFriendly/{slug}",
-    defaults: new { controller = "Posts", action = "Details" });
+    pattern: "BlogPosts/{slug}",
+    defaults: new { controller = "Posts", action = "Details" },
+    constraints: new { slug = @"^(?!UrlFriendly$).+" });
 
 app.MapControllerRoute(
     name: "default",
