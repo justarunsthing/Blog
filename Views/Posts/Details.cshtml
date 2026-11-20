@@ -19,6 +19,10 @@
         @if (Model.Post.Published is DateTime published)
         {
             <p class="story-meta mb-3">@clock.Format(published)</p>
+            @if (Model.Post.Updated is DateTime updated && clock.WasRevised(published, updated))
+            {
+                <p class="story-meta mb-3">Revised @clock.Format(updated)</p>
+            }
         }
         @if (!string.IsNullOrWhiteSpace(Model.Post.ContentType))
         {

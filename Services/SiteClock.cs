@@ -34,5 +34,10 @@ namespace Blog.Services
         {
             return ToLocal(value).ToString("yyyy-MM-dd");
         }
+
+        public bool WasRevised(DateTime published, DateTime updated)
+        {
+            return PublicUrl.AsUtc(updated) - PublicUrl.AsUtc(published) > TimeSpan.FromSeconds(2);
+        }
     }
 }
