@@ -79,6 +79,40 @@ public class DiscoveryMetadataTests
     }
 
     [Fact]
+    public async Task Sitemap_uses_the_London_revision_day_after_a_later_edit()
+    {
+        await using var database = new TestDatabase();
+        var published = new DateTime(2026, 1, 2, 3, 4, 5, DateTimeKind.Utc);
+        await database.AddPostAsync(
+            "ship-note",
+            ReadyStatus.Production,
+            "Ship",
+            "A public note",
+            published,
+            published,
+            updated: new DateTime(2026, 7, 1, 23, 30, 0, DateTimeKind.Utc));
+        await database.AddPostAsync(
+            "same-save",
+            ReadyStatus.Production,
+            "Same save",
+            "Published once",
+            published,
+            published,
+            updated: published.AddMilliseconds(50));
+
+        var result = await database.CreateDiscovery().Sitemap();
+
+        var document = XDocument.Parse(Assert.IsType<ContentResult>(result).Content);
+        XNamespace ns = "http://www.sitemaps.org/schemas/sitemap/0.9";
+        string LastMod(string slug) => document.Descendants(ns + "url")
+            .Single(url => url.Element(ns + "loc").Value.EndsWith("/" + slug, StringComparison.Ordinal))
+            .Element(ns + "lastmod").Value;
+
+        Assert.Equal("2026-07-02", LastMod("ship-note"));
+        Assert.Equal("2026-01-02", LastMod("same-save"));
+    }
+
+    [Fact]
     public void Robots_points_crawlers_at_the_request_host_sitemap_without_a_database()
     {
         var content = Assert.IsType<ContentResult>(RobotsFor("https", "example.com"));
@@ -189,7 +223,8 @@ public class DiscoveryMetadataTests
             string abstractText,
             DateTime? published,
             DateTime created,
-            string contentType = "image/png")
+            string contentType = "image/png",
+            DateTime? updated = null)
         {
             const string authorId = "author";
             if (!await _context.Users.AnyAsync(user => user.Id == authorId))
@@ -227,6 +262,7 @@ public class DiscoveryMetadataTests
                 Abstract = abstractText,
                 Content = "The post body",
                 Created = created,
+                Updated = updated,
                 Published = published,
                 Status = status,
                 Slug = slug,

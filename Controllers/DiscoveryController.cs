@@ -89,13 +89,20 @@ namespace Blog.Controllers
                 {
                     post.Slug,
                     post.Published,
-                    post.Created
+                    post.Created,
+                    post.Updated
                 })
                 .ToListAsync();
 
             foreach (var post in posts)
             {
                 var when = post.Published ?? post.Created;
+                if (post.Published is DateTime published
+                    && post.Updated is DateTime updated
+                    && _clock.WasRevised(published, updated))
+                {
+                    when = updated;
+                }
                 urlset.Add(UrlElement(
                     ns,
                     PublicUrl.ForPath(Request, PublicUrl.ForPost(post.Slug)),
